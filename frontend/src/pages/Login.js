@@ -1,70 +1,162 @@
 import React, { useState } from "react";
-import { TextField, Button, Box, Typography } from "@mui/material";
-import { apiRequest } from "../helpers/apiHelper";
-import API_ENDPOINTS from "../constants";
+import {
+  Container,
+  TextField,
+  Button,
+  Typography,
+  Box,
+  IconButton,
+  InputAdornment,
+  CircularProgress,
+} from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { Link, useNavigate } from "react-router-dom"; // Import useNavigate
 
 const Login = () => {
-  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const navigate = useNavigate(); // Initialize useNavigate for redirection
+
+  const handleLogin = async () => {
+    setLoading(true);
+    setErrorMessage(""); // Reset error message before attempting login
+
+    // Placeholder for login API call
     try {
-      const message = await apiRequest(API_ENDPOINTS.LOGIN, "POST", formData);
-      alert(message);
+      const response = await fetch("http://localhost:5000/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.status === 200) {
+        // Redirect to chat page or home page after successful login
+        navigate("/chat"); // Assuming chat page exists
+      } else {
+        setErrorMessage(data.message || "Login failed. Please try again.");
+      }
     } catch (error) {
-      alert(error);
+      setErrorMessage("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <Box
-      display="flex"
-      flexDirection="column"
-      alignItems="center"
-      justifyContent="center"
-      sx={{
-        mt: 4,
-        p: 3,
-        border: "1px solid #ccc",
-        borderRadius: 2,
-        maxWidth: 400,
-        mx: "auto",
-      }}
-    >
-      <Typography variant="h4" sx={{ mb: 3 }}>
-        Login
-      </Typography>
-      <form onSubmit={handleSubmit} style={{ width: "100%" }}>
+    <Container maxWidth="xs" sx={{ marginTop: "3rem" }}>
+      <Box textAlign="center" mt={5}>
+        <Typography variant="h5" sx={{ color: "secondary.main" }}>
+          Login
+        </Typography>
         <TextField
-          fullWidth
           label="Email"
-          variant="outlined"
+          fullWidth
           margin="normal"
-          value={formData.email}
-          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          sx={{
+            input: { color: "text.primary" },
+            "& .MuiInputLabel-root": {
+              color: "text.secondary", // Label color
+            },
+            "& .MuiOutlinedInput-root": {
+              "& fieldset": {
+                borderColor: "gray", // Default border color
+              },
+              "&:hover fieldset": {
+                borderColor: "secondary.main", // Border color on hover
+              },
+              "&.Mui-focused fieldset": {
+                borderColor: "secondary.main", // Border color when focused
+              },
+            },
+            "& .MuiInputBase-input::placeholder": {
+              color: "text.secondary", // Placeholder color
+            },
+            "& .MuiInputBase-input::placeholder:hover": {
+              color: "text.secondary", // Placeholder color
+            },
+          }}
         />
         <TextField
-          fullWidth
           label="Password"
-          type="password"
-          variant="outlined"
+          type={showPassword ? "text" : "password"}
+          fullWidth
           margin="normal"
-          value={formData.password}
-          onChange={(e) =>
-            setFormData({ ...formData, password: e.target.value })
-          }
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          sx={{
+            input: { color: "text.primary" },
+            "& .MuiInputLabel-root": {
+              color: "text.secondary", // Label color
+            },
+            "& .MuiOutlinedInput-root": {
+              "& fieldset": {
+                borderColor: "gray", // Default border color
+              },
+              "&:hover fieldset": {
+                borderColor: "secondary.main", // Border color on hover
+              },
+              "&.Mui-focused fieldset": {
+                borderColor: "secondary.main", // Border color when focused
+              },
+            },
+            "& .MuiInputBase-input::placeholder": {
+              color: "text.secondary", // Placeholder color
+            },
+            "& .MuiInputBase-input::placeholder:hover": {
+              color: "text.secondary", // Placeholder color
+            },
+          }}
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton
+                  onClick={() => setShowPassword(!showPassword)}
+                  edge="end"
+                >
+                  {showPassword ? <VisibilityOff /> : <Visibility />}
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
         />
         <Button
-          type="submit"
           variant="contained"
           color="primary"
           fullWidth
+          onClick={handleLogin}
           sx={{ mt: 2 }}
+          disabled={loading}
         >
-          Login
+          {loading ? (
+            <CircularProgress size={24} sx={{ color: "secondary.main" }} />
+          ) : (
+            "Login"
+          )}
         </Button>
-      </form>
-    </Box>
+        {errorMessage && (
+          <Typography variant="body2" sx={{ mt: 2, color: "error.main" }}>
+            {errorMessage}
+          </Typography>
+        )}
+        <Typography variant="body2" sx={{ mt: 2, color: "text.primary" }}>
+          Not registered?{" "}
+          <Link
+            to="/register"
+            style={{ color: "green", textDecoration: "none" }}
+          >
+            Register here
+          </Link>
+        </Typography>
+      </Box>
+    </Container>
   );
 };
 

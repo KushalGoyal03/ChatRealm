@@ -1,11 +1,21 @@
 import React from "react";
+import { Container, Typography, Box } from "@mui/material";
 
 const Home = () => {
   return (
-    <div>
-      <h1>Welcome to ChatSphere</h1>
-      <p>Login or Register to start chatting!</p>
-    </div>
+    <Container>
+      <Box textAlign="center" mt={5}>
+        <Typography
+          variant="h3"
+          sx={{ marginTop: "10rem", fontWeight: "bold" }}
+        >
+          Welcome to ChatSphere
+        </Typography>
+        <Typography variant="subtitle1" mt={2}>
+          Connect, Chat, and Share with your friends.
+        </Typography>
+      </Box>
+    </Container>
   );
 };
 
