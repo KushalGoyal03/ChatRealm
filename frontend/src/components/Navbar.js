@@ -1,5 +1,5 @@
 import React from "react";
-import { AppBar, Toolbar, Typography, Button } from "@mui/material";
+import { AppBar, Toolbar, Typography, Button, Box } from "@mui/material";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 const Navbar = () => {
@@ -12,12 +12,16 @@ const Navbar = () => {
   };
 
   return (
-    <AppBar
-      position="static"
-      color="primary"
-      //sx={{ bgcolor: "#1E1E1E" }}
-    >
+    <AppBar position="static" color="primary">
       <Toolbar>
+        {/* Logo Image */}
+        <Box
+          component="img"
+          src="/logo.png" // Make sure this matches the filename in /public folder
+          alt="ChatSphere Logo"
+          sx={{ height: 40, width: 40, mr: 1, borderRadius: "50%" }}
+        />
+
         <Typography variant="h6" sx={{ flexGrow: 1 }}>
           <strong>ChatSphere</strong>
         </Typography>

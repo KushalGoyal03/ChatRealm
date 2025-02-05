@@ -49,9 +49,12 @@ const Login = () => {
   };
 
   return (
-    <Container maxWidth="xs" sx={{ marginTop: "3rem" }}>
+    <Container maxWidth="xs" sx={{ marginTop: "2rem" }}>
       <Box textAlign="center" mt={5}>
-        <Typography variant="h5" sx={{ color: "secondary.main" }}>
+        <Typography
+          variant="h5"
+          sx={{ color: "secondary.main", fontWeight: "bold" }}
+        >
           Login
         </Typography>
         <TextField
@@ -61,9 +64,13 @@ const Login = () => {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           sx={{
-            input: { color: "text.primary" },
+            input: { color: "text.primary" }, // Text color inside the input
             "& .MuiInputLabel-root": {
-              color: "text.secondary", // Label color
+              color: "text.secondary", // Default label color
+              //transition: "color 0.3s ease-in-out",
+            },
+            "& .MuiInputLabel-root.Mui-focused": {
+              color: "white", // Floating label color when focused
             },
             "& .MuiOutlinedInput-root": {
               "& fieldset": {
@@ -77,10 +84,8 @@ const Login = () => {
               },
             },
             "& .MuiInputBase-input::placeholder": {
-              color: "text.secondary", // Placeholder color
-            },
-            "& .MuiInputBase-input::placeholder:hover": {
-              color: "text.secondary", // Placeholder color
+              color: "text.secondary", // Default placeholder color
+              //transition: "color 0.3s ease-in-out",
             },
           }}
         />
@@ -92,9 +97,13 @@ const Login = () => {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           sx={{
-            input: { color: "text.primary" },
+            input: { color: "text.primary" }, // Text color inside the input
             "& .MuiInputLabel-root": {
-              color: "text.secondary", // Label color
+              color: "text.secondary", // Default label color
+              //transition: "color 0.3s ease-in-out",
+            },
+            "& .MuiInputLabel-root.Mui-focused": {
+              color: "white", // Floating label color when focused
             },
             "& .MuiOutlinedInput-root": {
               "& fieldset": {
@@ -108,10 +117,8 @@ const Login = () => {
               },
             },
             "& .MuiInputBase-input::placeholder": {
-              color: "text.secondary", // Placeholder color
-            },
-            "& .MuiInputBase-input::placeholder:hover": {
-              color: "text.secondary", // Placeholder color
+              color: "text.secondary", // Default placeholder color
+              //transition: "color 0.3s ease-in-out",
             },
           }}
           InputProps={{

@@ -3,6 +3,7 @@ import {
   Container,
   TextField,
   Button,
+  Box,
   Typography,
   IconButton,
   InputAdornment,
@@ -53,150 +54,159 @@ const Register = () => {
   };
 
   return (
-    <Container maxWidth="xs" sx={{ marginTop: "3rem" }}>
-      <Typography
-        variant="h5"
-        sx={{
-          color: "secondary.main",
-          mb: 2,
-          textAlign: "center",
-        }}
-      >
-        Register
-      </Typography>
-      <TextField
-        label="Email"
-        fullWidth
-        margin="normal"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        error={emailError}
-        helperText={emailError ? "Please enter a valid email" : ""}
-        sx={{
-          input: { color: "text.primary" },
-          "& .MuiInputLabel-root": {
-            color: "text.secondary", // Label color
-          },
-          "& .MuiOutlinedInput-root": {
-            "& fieldset": {
-              borderColor: "gray", // Default border color
-            },
-            "&:hover fieldset": {
-              borderColor: "secondary.main", // Border color on hover
-            },
-            "&.Mui-focused fieldset": {
-              borderColor: "secondary.main", // Border color when focused
-            },
-          },
-          "& .MuiInputBase-input::placeholder": {
-            color: "text.secondary", // Placeholder color
-          },
-          "& .MuiInputBase-input::placeholder:hover": {
-            color: "text.secondary", // Placeholder color
-          },
-        }}
-      />
-      <TextField
-        label="Username"
-        fullWidth
-        margin="normal"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-        sx={{
-          input: { color: "text.primary" },
-          "& .MuiInputLabel-root": {
-            color: "text.secondary", // Label color
-          },
-          "& .MuiOutlinedInput-root": {
-            "& fieldset": {
-              borderColor: "gray", // Default border color
-            },
-            "&:hover fieldset": {
-              borderColor: "secondary.main", // Border color on hover
-            },
-            "&.Mui-focused fieldset": {
-              borderColor: "secondary.main", // Border color when focused
-            },
-          },
-          "& .MuiInputBase-input::placeholder": {
-            color: "text.secondary", // Placeholder color
-          },
-          "& .MuiInputBase-input::placeholder:hover": {
-            color: "text.secondary", // Placeholder color
-          },
-        }}
-      />
-      <TextField
-        label="Password"
-        type={showPassword ? "text" : "password"}
-        fullWidth
-        margin="normal"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        sx={{
-          input: { color: "text.primary" },
-          "& .MuiInputLabel-root": {
-            color: "text.secondary", // Label color
-          },
-          "& .MuiOutlinedInput-root": {
-            "& fieldset": {
-              borderColor: "gray", // Default border color
-            },
-            "&:hover fieldset": {
-              borderColor: "secondary.main", // Border color on hover
-            },
-            "&.Mui-focused fieldset": {
-              borderColor: "secondary.main", // Border color when focused
-            },
-          },
-          "& .MuiInputBase-input::placeholder": {
-            color: "text.secondary", // Placeholder color
-          },
-          "& .MuiInputBase-input::placeholder:hover": {
-            color: "text.secondary", // Placeholder color
-          },
-        }}
-        InputProps={{
-          endAdornment: (
-            <InputAdornment position="end">
-              <IconButton
-                onClick={() => setShowPassword(!showPassword)}
-                edge="end"
-              >
-                {showPassword ? <VisibilityOff /> : <Visibility />}
-              </IconButton>
-            </InputAdornment>
-          ),
-        }}
-      />
-      <Button
-        variant="contained"
-        fullWidth
-        onClick={handleRegister}
-        sx={{
-          mt: 2,
-          bgcolor: "primary.main",
-          color: "secondary.main",
-        }}
-        disabled={loading}
-      >
-        {loading ? (
-          <CircularProgress size={24} sx={{ color: "secondary.main" }} />
-        ) : (
-          "Register"
-        )}
-      </Button>
-      {errorMessage && (
-        <Typography variant="body2" sx={{ mt: 2, color: "error.main" }}>
-          {errorMessage}
+    <Container maxWidth="xs" sx={{ marginTop: "1rem" }}>
+      <Box textAlign="center" mt={5}>
+        <Typography
+          variant="h5"
+          sx={{ color: "secondary.main", fontWeight: "bold" }}
+        >
+          Register
         </Typography>
-      )}
-      <Typography variant="body2" sx={{ mt: 2, color: "text.primary" }}>
-        Already registered?{" "}
-        <Link to="/login" style={{ color: "green", textDecoration: "none" }}>
-          Login here
-        </Link>
-      </Typography>
+        <TextField
+          label="Email"
+          fullWidth
+          margin="normal"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          error={emailError}
+          helperText={emailError ? "Please enter a valid email" : ""}
+          sx={{
+            input: { color: "text.primary" }, // Text color inside the input
+            "& .MuiInputLabel-root": {
+              color: "text.secondary", // Default label color
+              //transition: "color 0.3s ease-in-out",
+            },
+            "& .MuiInputLabel-root.Mui-focused": {
+              color: "white", // Floating label color when focused
+            },
+            "& .MuiOutlinedInput-root": {
+              "& fieldset": {
+                borderColor: "gray", // Default border color
+              },
+              "&:hover fieldset": {
+                borderColor: "secondary.main", // Border color on hover
+              },
+              "&.Mui-focused fieldset": {
+                borderColor: "secondary.main", // Border color when focused
+              },
+            },
+            "& .MuiInputBase-input::placeholder": {
+              color: "text.secondary", // Default placeholder color
+              //transition: "color 0.3s ease-in-out",
+            },
+            "&:-webkit-autofill": {
+              WebkitBoxShadow: "0 0 0px 1000px transparent inset !important",
+              WebkitTextFillColor: "white !important", // Force text color for autofill
+              //transition: "background-color 5000s ease-in-out 0s", // Prevent autofill background color change
+            },
+          }}
+        />
+        <TextField
+          label="Username"
+          fullWidth
+          margin="normal"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          sx={{
+            input: { color: "text.primary" }, // Text color inside the input
+            "& .MuiInputLabel-root": {
+              color: "text.secondary", // Default label color
+              //transition: "color 0.3s ease-in-out",
+            },
+            "& .MuiInputLabel-root.Mui-focused": {
+              color: "white", // Floating label color when focused
+            },
+            "& .MuiOutlinedInput-root": {
+              "& fieldset": {
+                borderColor: "gray", // Default border color
+              },
+              "&:hover fieldset": {
+                borderColor: "secondary.main", // Border color on hover
+              },
+              "&.Mui-focused fieldset": {
+                borderColor: "secondary.main", // Border color when focused
+              },
+            },
+            "& .MuiInputBase-input::placeholder": {
+              color: "text.secondary", // Default placeholder color
+              //transition: "color 0.3s ease-in-out",
+            },
+          }}
+        />
+        <TextField
+          label="Password"
+          type={showPassword ? "text" : "password"}
+          fullWidth
+          margin="normal"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          sx={{
+            input: { color: "text.primary" }, // Text color inside the input
+            "& .MuiInputLabel-root": {
+              color: "text.secondary", // Default label color
+              //transition: "color 0.3s ease-in-out",
+            },
+            "& .MuiInputLabel-root.Mui-focused": {
+              color: "white", // Floating label color when focused
+            },
+            "& .MuiOutlinedInput-root": {
+              "& fieldset": {
+                borderColor: "gray", // Default border color
+              },
+              "&:hover fieldset": {
+                borderColor: "secondary.main", // Border color on hover
+              },
+              "&.Mui-focused fieldset": {
+                borderColor: "secondary.main", // Border color when focused
+              },
+            },
+            "& .MuiInputBase-input::placeholder": {
+              color: "text.secondary", // Default placeholder color
+              //transition: "color 0.3s ease-in-out",
+            },
+          }}
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton
+                  onClick={() => setShowPassword(!showPassword)}
+                  edge="end"
+                >
+                  {showPassword ? <VisibilityOff /> : <Visibility />}
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+        />
+        <Button
+          variant="contained"
+          fullWidth
+          onClick={handleRegister}
+          sx={{
+            mt: 2,
+            bgcolor: "primary.main",
+            color: "secondary.main",
+          }}
+          disabled={loading}
+        >
+          {loading ? (
+            <CircularProgress size={24} sx={{ color: "secondary.main" }} />
+          ) : (
+            "Register"
+          )}
+        </Button>
+        {errorMessage && (
+          <Typography variant="body2" sx={{ mt: 2, color: "error.main" }}>
+            {errorMessage}
+          </Typography>
+        )}
+        <Typography variant="body2" sx={{ mt: 2, color: "text.primary" }}>
+          Already registered?{" "}
+          <Link to="/login" style={{ color: "green", textDecoration: "none" }}>
+            Login here
+          </Link>
+        </Typography>
+      </Box>
     </Container>
   );
 };
