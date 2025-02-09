@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const cors = require("cors");
 const userRoutes = require("./routes/api_routes");
+const groupRoutes = require("./routes/groupRoutes");
 
 dotenv.config(); // Load environment variables from .env
 
@@ -22,6 +23,7 @@ mongoose
 
 // Routes
 app.use("/api", userRoutes);
+app.use("/api/groups", groupRoutes);
 
 // Server start
 app.listen(PORT, () => {

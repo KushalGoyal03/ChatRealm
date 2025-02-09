@@ -192,7 +192,7 @@ const Register = () => {
           {loading ? (
             <CircularProgress size={24} sx={{ color: "secondary.main" }} />
           ) : (
-            "Register"
+            "Sign up"
           )}
         </Button>
         {errorMessage && (
@@ -201,9 +201,9 @@ const Register = () => {
           </Typography>
         )}
         <Typography variant="body2" sx={{ mt: 2, color: "text.primary" }}>
-          Already registered?{" "}
-          <Link to="/login" style={{ color: "green", textDecoration: "none" }}>
-            Login here
+          <strong>Already registered?</strong>{" "}
+          <Link to="/login" style={{ color: "aqua", textDecoration: "none" }}>
+            Sign in here
           </Link>
         </Typography>
       </Box>

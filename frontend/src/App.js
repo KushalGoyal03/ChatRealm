@@ -1,6 +1,6 @@
 import React from "react";
 import { ThemeProvider, CssBaseline, Container } from "@mui/material";
-import theme from "./components/theme"; // Import the theme
+import theme from "./helpers/theme"; // Import the theme
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";

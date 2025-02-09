@@ -8,7 +8,7 @@ const Navbar = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("user"); // Remove user data
-    navigate("/login"); // Redirect to login
+    navigate("/"); // Redirect to home
   };
 
   return (
@@ -37,7 +37,7 @@ const Navbar = () => {
         {/* Register button on Login page */}
         {location.pathname === "/login" && (
           <Button color="inherit" component={Link} to="/register">
-            Register
+            Sign up
           </Button>
         )}
 
@@ -58,11 +58,11 @@ const Navbar = () => {
         {/* Login & Register buttons on Home page */}
         {location.pathname === "/" && (
           <>
+            <Button color="inherit" component={Link} to="/register">
+              Sign up
+            </Button>
             <Button color="inherit" component={Link} to="/login">
               Login
-            </Button>
-            <Button color="inherit" component={Link} to="/register">
-              Register
             </Button>
           </>
         )}

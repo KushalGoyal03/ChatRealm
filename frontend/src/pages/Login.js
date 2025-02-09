@@ -154,12 +154,12 @@ const Login = () => {
           </Typography>
         )}
         <Typography variant="body2" sx={{ mt: 2, color: "text.primary" }}>
-          Not registered?{" "}
+          <strong>Not registered?</strong>{" "}
           <Link
             to="/register"
-            style={{ color: "green", textDecoration: "none" }}
+            style={{ color: "aqua", textDecoration: "none" }}
           >
-            Register here
+            Sign up here
           </Link>
         </Typography>
       </Box>
