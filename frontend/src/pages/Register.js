@@ -54,8 +54,8 @@ const Register = () => {
   };
 
   return (
-    <Container maxWidth="xs" sx={{ marginTop: "1rem" }}>
-      <Box textAlign="center" mt={5}>
+    <Container maxWidth="xs">
+      <Box textAlign="center" mt={8}>
         <Typography
           variant="h5"
           sx={{ color: "secondary.main", fontWeight: "bold" }}

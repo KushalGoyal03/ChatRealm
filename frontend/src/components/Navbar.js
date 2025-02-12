@@ -57,14 +57,14 @@ const Navbar = () => {
 
         {/* Login & Register buttons on Home page */}
         {location.pathname === "/" && (
-          <>
-            <Button color="inherit" component={Link} to="/register">
-              Sign up
-            </Button>
-            <Button color="inherit" component={Link} to="/login">
-              Login
-            </Button>
-          </>
+          // <>
+          //   <Button color="inherit" component={Link} to="/register">
+          //     Sign up
+          //   </Button>
+          <Button color="inherit" component={Link} to="/login">
+            Login
+          </Button>
+          // </>
         )}
       </Toolbar>
     </AppBar>

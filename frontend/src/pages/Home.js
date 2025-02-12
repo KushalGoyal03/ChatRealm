@@ -4,11 +4,8 @@ import { Container, Typography, Box } from "@mui/material";
 const Home = () => {
   return (
     <Container>
-      <Box textAlign="center" mt={5}>
-        <Typography
-          variant="h3"
-          sx={{ marginTop: "10rem", fontWeight: "bold" }}
-        >
+      <Box textAlign="center" mt={20}>
+        <Typography variant="h3" sx={{ fontWeight: "bold" }}>
           Welcome to ChatSphere
         </Typography>
         <Typography variant="subtitle1" mt={2}>

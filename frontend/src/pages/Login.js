@@ -49,8 +49,8 @@ const Login = () => {
   };
 
   return (
-    <Container maxWidth="xs" sx={{ marginTop: "2rem" }}>
-      <Box textAlign="center" mt={5}>
+    <Container maxWidth="xs">
+      <Box textAlign="center" mt={10}>
         <Typography
           variant="h5"
           sx={{ color: "secondary.main", fontWeight: "bold" }}

@@ -19,12 +19,12 @@ const App = () => {
           maxWidth="md"
           sx={{
             backgroundColor: "background.default",
-            //minHeight: "90vh",
+            // minHeight: "100%"
             display: "flex",
             flexDirection: "column",
             justifyContent: "center",
             alignItems: "center",
-            //paddingTop: "20px",
+            height: "100%",
           }}
         >
           <Routes>
