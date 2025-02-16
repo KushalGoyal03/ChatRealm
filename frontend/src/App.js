@@ -15,7 +15,6 @@ import Chat from "./pages/Chat";
 
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
-
   // Listen for login status changes
   useEffect(() => {
     const checkAuth = () => {
@@ -30,9 +29,8 @@ const App = () => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
-        {isLoggedIn && <Navbar setIsLoggedIn={setIsLoggedIn} />}
         {/* Show Navbar only if logged in */}
-        {/* {isLoggedIn && <Navbar />}  */}
+        {isLoggedIn && <Navbar setIsLoggedIn={setIsLoggedIn} />}
         <Container
           maxWidth="md"
           sx={{

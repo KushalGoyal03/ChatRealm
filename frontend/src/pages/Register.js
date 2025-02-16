@@ -1,16 +1,23 @@
 import React, { useState } from "react";
 import {
-  Container,
   TextField,
   Button,
-  Box,
   Typography,
+  Box,
   IconButton,
   InputAdornment,
   CircularProgress,
+  Snackbar,
+  Alert,
 } from "@mui/material";
-import { Visibility, VisibilityOff } from "@mui/icons-material";
-import { Link, useNavigate } from "react-router-dom"; // Use useNavigate instead of useHistory
+import {
+  Visibility,
+  VisibilityOff,
+  EmailOutlined,
+  PersonOutline,
+  LockOutlined,
+} from "@mui/icons-material";
+import { Link, useNavigate } from "react-router-dom";
 import { isValidEmail } from "../utils/validateEmail";
 
 const Register = () => {
@@ -18,18 +25,18 @@ const Register = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [emailError, setEmailError] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState(false); // Snackbar state
 
-  const navigate = useNavigate(); // Initialize navigate
+  const navigate = useNavigate();
 
   const handleRegister = async () => {
     if (!isValidEmail(email)) {
-      setEmailError(true);
+      setErrorMessage("Please enter a valid email");
       return;
     }
-    setEmailError(false);
+    setErrorMessage("");
     setLoading(true);
 
     try {
@@ -42,9 +49,12 @@ const Register = () => {
       const data = await response.json();
 
       if (response.status === 201) {
-        navigate("/login"); // Use navigate to redirect
+        setSuccessMessage(true); // Show success Snackbar
+        setTimeout(() => {
+          navigate("/login"); // Redirect after success message
+        }, 2000);
       } else {
-        setErrorMessage(data.message);
+        setErrorMessage(data.message || "Registration failed. Try again.");
       }
     } catch (error) {
       setErrorMessage("Something went wrong. Please try again.");
@@ -54,160 +64,175 @@ const Register = () => {
   };
 
   return (
-    <Container maxWidth="xs">
-      <Box textAlign="center" mt={8}>
-        <Typography
-          variant="h5"
-          sx={{ color: "secondary.main", fontWeight: "bold" }}
+    <Box display="flex" height="100vh" width="100vw">
+      {/* Left 65% - Image Section */}
+      <Box
+        flex="6.5"
+        sx={{
+          backgroundImage: 'url("/background512.png")',
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+        }}
+      />
+
+      {/* Right 35% - Register Form Section */}
+      <Box
+        flex="3.5"
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        sx={{
+          backgroundColor: "#f0f8ff",
+          boxShadow: "-4px 0px 10px rgba(0, 0, 0, 0.3)",
+        }}
+      >
+        <Box
+          textAlign="center"
+          sx={{
+            width: "80%",
+            marginTop: "-50px",
+            input: { color: "primary.main" },
+            "& .MuiInputLabel-root": { color: "primary.main" },
+            "& .MuiOutlinedInput-root": {
+              "& fieldset": { borderColor: "primary.main" },
+              "&:hover fieldset": {
+                borderColor: "primary.main",
+                borderWidth: "2px",
+              },
+              "&.Mui-focused fieldset": {
+                borderColor: "primary.main",
+                borderWidth: "2px",
+              },
+            },
+          }}
         >
-          Register
-        </Typography>
-        <TextField
-          label="Email"
-          fullWidth
-          margin="normal"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          error={emailError}
-          helperText={emailError ? "Please enter a valid email" : ""}
-          sx={{
-            input: { color: "text.primary" }, // Text color inside the input
-            "& .MuiInputLabel-root": {
-              color: "text.secondary", // Default label color
-              //transition: "color 0.3s ease-in-out",
-            },
-            "& .MuiInputLabel-root.Mui-focused": {
-              color: "white", // Floating label color when focused
-            },
-            "& .MuiOutlinedInput-root": {
-              "& fieldset": {
-                borderColor: "gray", // Default border color
-              },
-              "&:hover fieldset": {
-                borderColor: "secondary.main", // Border color on hover
-              },
-              "&.Mui-focused fieldset": {
-                borderColor: "secondary.main", // Border color when focused
-              },
-            },
-            "& .MuiInputBase-input::placeholder": {
-              color: "text.secondary", // Default placeholder color
-              //transition: "color 0.3s ease-in-out",
-            },
-            "&:-webkit-autofill": {
-              WebkitBoxShadow: "0 0 0px 1000px transparent inset !important",
-              WebkitTextFillColor: "white !important", // Force text color for autofill
-              //transition: "background-color 5000s ease-in-out 0s", // Prevent autofill background color change
-            },
-          }}
-        />
-        <TextField
-          label="Username"
-          fullWidth
-          margin="normal"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          sx={{
-            input: { color: "text.primary" }, // Text color inside the input
-            "& .MuiInputLabel-root": {
-              color: "text.secondary", // Default label color
-              //transition: "color 0.3s ease-in-out",
-            },
-            "& .MuiInputLabel-root.Mui-focused": {
-              color: "white", // Floating label color when focused
-            },
-            "& .MuiOutlinedInput-root": {
-              "& fieldset": {
-                borderColor: "gray", // Default border color
-              },
-              "&:hover fieldset": {
-                borderColor: "secondary.main", // Border color on hover
-              },
-              "&.Mui-focused fieldset": {
-                borderColor: "secondary.main", // Border color when focused
-              },
-            },
-            "& .MuiInputBase-input::placeholder": {
-              color: "text.secondary", // Default placeholder color
-              //transition: "color 0.3s ease-in-out",
-            },
-          }}
-        />
-        <TextField
-          label="Password"
-          type={showPassword ? "text" : "password"}
-          fullWidth
-          margin="normal"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          sx={{
-            input: { color: "text.primary" }, // Text color inside the input
-            "& .MuiInputLabel-root": {
-              color: "text.secondary", // Default label color
-              //transition: "color 0.3s ease-in-out",
-            },
-            "& .MuiInputLabel-root.Mui-focused": {
-              color: "white", // Floating label color when focused
-            },
-            "& .MuiOutlinedInput-root": {
-              "& fieldset": {
-                borderColor: "gray", // Default border color
-              },
-              "&:hover fieldset": {
-                borderColor: "secondary.main", // Border color on hover
-              },
-              "&.Mui-focused fieldset": {
-                borderColor: "secondary.main", // Border color when focused
-              },
-            },
-            "& .MuiInputBase-input::placeholder": {
-              color: "text.secondary", // Default placeholder color
-              //transition: "color 0.3s ease-in-out",
-            },
-          }}
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton
-                  onClick={() => setShowPassword(!showPassword)}
-                  edge="end"
-                >
-                  {showPassword ? <VisibilityOff /> : <Visibility />}
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-        />
-        <Button
-          variant="contained"
-          fullWidth
-          onClick={handleRegister}
-          sx={{
-            mt: 2,
-            bgcolor: "primary.main",
-            color: "secondary.main",
-          }}
-          disabled={loading}
-        >
-          {loading ? (
-            <CircularProgress size={24} sx={{ color: "secondary.main" }} />
-          ) : (
-            "Sign up"
-          )}
-        </Button>
-        {errorMessage && (
-          <Typography variant="body2" sx={{ mt: 2, color: "error.main" }}>
-            {errorMessage}
+          {/* Logo */}
+          <img
+            src="/logo.png"
+            alt="ChatSphere Logo"
+            style={{
+              width: "60px",
+              height: "auto",
+              marginBottom: "10px",
+              borderRadius: "50%",
+            }}
+          />
+          <Typography
+            variant="h4"
+            sx={{ color: "primary.main", fontWeight: "bold", mb: 2 }}
+          >
+            Join ChatSphere
           </Typography>
-        )}
-        <Typography variant="body2" sx={{ mt: 2, color: "text.primary" }}>
-          <strong>Already registered?</strong>{" "}
-          <Link to="/login" style={{ color: "aqua", textDecoration: "none" }}>
-            Sign in here
-          </Link>
-        </Typography>
+
+          {/* Email Input */}
+          <TextField
+            label="Email"
+            fullWidth
+            margin="normal"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <EmailOutlined color="primary" />
+                </InputAdornment>
+              ),
+            }}
+          />
+
+          {/* Username Input */}
+          <TextField
+            label="Username"
+            fullWidth
+            margin="normal"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <PersonOutline color="primary" />
+                </InputAdornment>
+              ),
+            }}
+          />
+
+          {/* Password Input */}
+          <TextField
+            label="Password"
+            type={showPassword ? "text" : "password"}
+            fullWidth
+            margin="normal"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <LockOutlined color="primary" />
+                </InputAdornment>
+              ),
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={() => setShowPassword(!showPassword)}
+                    edge="end"
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
+
+          {/* Register Button */}
+          <Button
+            variant="contained"
+            color="primary"
+            fullWidth
+            onClick={handleRegister}
+            sx={{ mt: 2 }}
+            disabled={loading}
+          >
+            {loading ? (
+              <CircularProgress size={24} sx={{ color: "secondary.main" }} />
+            ) : (
+              "Sign Up"
+            )}
+          </Button>
+
+          {/* Error Message */}
+          {errorMessage && (
+            <Typography variant="body2" sx={{ mt: 2, color: "error.main" }}>
+              {errorMessage}
+            </Typography>
+          )}
+
+          {/* Sign In Link */}
+          <Typography variant="body2" sx={{ mt: 2, color: "primary.main" }}>
+            <strong>Already registered?</strong>{" "}
+            <Link to="/login" style={{ textDecoration: "none" }}>
+              Sign in here
+            </Link>
+          </Typography>
+        </Box>
       </Box>
-    </Container>
+
+      {/* Snackbar for Success Message */}
+      <Snackbar
+        open={successMessage}
+        autoHideDuration={3000}
+        onClose={() => setSuccessMessage(false)}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          severity="success"
+          onClose={() => setSuccessMessage(false)}
+          sx={{ width: "100%" }}
+        >
+          Registration successful! Redirecting to login...
+        </Alert>
+      </Snackbar>
+    </Box>
   );
 };
 
