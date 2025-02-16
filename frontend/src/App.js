@@ -14,7 +14,7 @@ const App = () => {
     <ThemeProvider theme={theme}>
       <CssBaseline /> {/* Resets Styles */}
       <Router>
-        <Navbar />
+        {/* <Navbar /> */}
         <Container
           maxWidth="md"
           sx={{
@@ -25,6 +25,8 @@ const App = () => {
             justifyContent: "center",
             alignItems: "center",
             height: "100%",
+            //margin: 0,
+            padding: 0,
           }}
         >
           <Routes>
@@ -34,7 +36,7 @@ const App = () => {
             <Route path="/chat" element={<Chat />} />
           </Routes>
         </Container>
-        <Footer />
+        {/* <Footer /> */}
       </Router>
     </ThemeProvider>
   );
