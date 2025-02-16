@@ -89,7 +89,7 @@ const Chat = () => {
   };
 
   return (
-    <Box display="flex" width="100vw" minHeight="82vh" margin="-20px">
+    <Box display="flex" width="100vw" minHeight="82vh">
       {/* Sidebar */}
       <Box
         width="30%"
