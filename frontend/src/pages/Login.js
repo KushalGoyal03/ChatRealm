@@ -17,7 +17,7 @@ import {
 } from "@mui/icons-material";
 import { Link, useNavigate } from "react-router-dom";
 
-const Login = () => {
+const Login = ({ setIsLoggedIn }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -38,9 +38,12 @@ const Login = () => {
       });
 
       const data = await response.json();
+      console.log("Login API Response:", data); // ✅ Debugging
 
-      if (response.status === 200) {
-        navigate("/chat");
+      if (response.status === 200 && data.token) {
+        localStorage.setItem("token", data.token);
+        setIsLoggedIn(true); // ✅ Update auth state
+        navigate("/chat"); // Redirect to chat page
       } else {
         setErrorMessage(data.message || "Login failed. Please try again.");
       }
@@ -79,7 +82,7 @@ const Login = () => {
           <Box textAlign="center">
             {/* Logo */}
             <img
-              src="/logo.png" // Update the path if needed
+              src="/logo.png"
               alt="ChatSphere Logo"
               style={{
                 width: "80px",
