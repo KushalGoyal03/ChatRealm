@@ -14,21 +14,33 @@ import {
   DialogActions,
   TextField,
   IconButton,
+  //Divider,
 } from "@mui/material";
+//import SearchIcon from "@mui/icons-material/Search";
+//import SettingsIcon from "@mui/icons-material/Settings";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
+//import GroupAddIcon from "@mui/icons-material/GroupAdd";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
 import SendIcon from "@mui/icons-material/Send";
 import MenuIcon from "@mui/icons-material/Menu";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
+//import CloseIcon from "@mui/icons-material/Close";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+//import { InputAdornment } from "@mui/material";
 
 const Chat = () => {
   const [selectedChat, setSelectedChat] = useState(null);
+  // const [groups, setGroups] = useState([]);
+  //   const [openGroupDialog, setOpenGroupDialog] = useState(false);
+  //   const [groupName, setGroupName] = useState("");
+  //   const [emails, setEmails] = useState("");
   const [menuAnchor, setMenuAnchor] = useState(null);
+  //const [searchOpen, setSearchOpen] = useState(false);
+  //const [searchTerm, setSearchTerm] = useState("");
   const [openNewChatDialog, setOpenNewChatDialog] = useState(false);
   const [newChatEmail, setNewChatEmail] = useState("");
-  const [chats, setChats] = useState([]); // Store dynamically created chats
+  const [chats, setChats] = useState([]); // Store both groups & individual chats
 
   const handleMenuOpen = (event) => {
     setMenuAnchor(event.currentTarget);
@@ -39,18 +51,21 @@ const Chat = () => {
   };
 
   const handleCreateNewChat = () => {
-    if (!newChatEmail.trim()) return;
+    if (newChatEmail.trim() === "") return;
 
+    // Create a new chat object
     const newChat = {
-      id: Date.now(),
-      name: newChatEmail,
-      type: "individual",
+      id: Date.now(), // Temporary unique ID
+      name: newChatEmail, // Use email as chat name
+      type: "individual", // Mark it as a 1-on-1 chat
     };
 
-    setChats((prevChats) => [...prevChats, newChat]);
+    // Update chat list
+    setChats([...chats, newChat]);
 
+    // Close dialog
     setOpenNewChatDialog(false);
-    setNewChatEmail("");
+    setNewChatEmail(""); // Reset input field
   };
 
   return (
@@ -73,6 +88,7 @@ const Chat = () => {
           p={1}
           sx={{ backgroundColor: "secondary.main" }}
         >
+          {/* Three-line Menu Icon */}
           <IconButton sx={{ color: "primary.main" }} onClick={handleMenuOpen}>
             <MenuIcon />
           </IconButton>
@@ -86,20 +102,34 @@ const Chat = () => {
             <MenuItem onClick={() => setOpenNewChatDialog(true)}>
               <AddCircleIcon sx={{ mr: 1 }} /> New Chat
             </MenuItem>
+            {/* <MenuItem onClick={() => setOpenGroupDialog(true)}>
+              <GroupAddIcon sx={{ mr: 1 }} /> Create Group
+            </MenuItem> */}
             <MenuItem onClick={() => alert("Chat with bot coming soon!")}>
               <SmartToyIcon sx={{ mr: 1 }} /> Chat with Bot
             </MenuItem>
           </Menu>
+
+          {/* Search Bar */}
         </Box>
 
         {/* Chat List */}
         <List sx={{ flexGrow: 1, overflowY: "auto", px: 2 }}>
-          {chats.length > 0 ? (
-            chats.map((chat) => (
+          {/* Render Individual Chats */}
+          <Typography
+            variant="subtitle2"
+            sx={{ color: "gray", px: 2, py: 1, fontWeight: "bold" }}
+          >
+            Private Chats
+          </Typography>
+          {["John Doe", "Jane Smith", "Alice Johnson", "Bob Williams"].map(
+            (chat, index) => (
               <ListItem
                 button
-                key={chat.id}
-                onClick={() => setSelectedChat(chat)}
+                key={`temp-${index}`}
+                onClick={() =>
+                  setSelectedChat({ id: `temp-${index}`, name: chat })
+                }
                 sx={{
                   borderBottom: "1px solid #3c3f41",
                   "&:hover": { backgroundColor: "#3c3f41" },
@@ -107,25 +137,19 @@ const Chat = () => {
               >
                 <ListItemAvatar>
                   <Avatar sx={{ bgcolor: "secondary.main", color: "white" }}>
-                    {chat.name[0].toUpperCase()}
+                    {chat[0].toUpperCase()}
                   </Avatar>
                 </ListItemAvatar>
-                <ListItemText primary={chat.name} secondary="Last message..." />
+                <ListItemText primary={chat} secondary="Last message..." />
               </ListItem>
-            ))
-          ) : (
-            <Typography
-              variant="subtitle2"
-              sx={{ color: "gray", px: 2, py: 2, textAlign: "center" }}
-            >
-              No chats yet. Start a new chat!
-            </Typography>
+            )
           )}
         </List>
       </Box>
 
       {/* Main Chat Area */}
       <Box flexGrow={1} display="flex" flexDirection="column">
+        {/* Chat Header */}
         {selectedChat ? (
           <>
             <Box
@@ -138,6 +162,7 @@ const Chat = () => {
                 borderBottom: "1px solid #3c3f41",
               }}
             >
+              {/* Back Button */}
               <IconButton
                 onClick={() => setSelectedChat(null)}
                 sx={{ color: "white", mr: 1 }}
@@ -145,17 +170,19 @@ const Chat = () => {
                 <ArrowBackIcon />
               </IconButton>
               <Avatar sx={{ bgcolor: "secondary.main", mr: 2 }}>
-                {selectedChat?.name[0].toUpperCase()}
+                {selectedChat?.name[0] || "C"}
               </Avatar>
               <Typography variant="h6">{selectedChat.name}</Typography>
             </Box>
 
+            {/* Chat Messages */}
             <Box flexGrow={1} p={2} sx={{ overflowY: "auto" }}>
               <Typography variant="body1" color="textSecondary">
                 Chat messages will appear here...
               </Typography>
             </Box>
 
+            {/* Chat Input */}
             <Box
               display="flex"
               p={1}
@@ -171,6 +198,7 @@ const Chat = () => {
                 variant="outlined"
                 sx={{
                   borderRadius: "15px",
+                  color: "primary",
                   "& .MuiOutlinedInput-root": {
                     "& fieldset": {
                       borderColor: "primary.main",
@@ -181,7 +209,13 @@ const Chat = () => {
                       borderWidth: "2px",
                     },
                   },
-                  "& .MuiInputBase-input": { color: "blue" },
+                  "& .MuiInputBase-input::placeholder": {
+                    color: "primary.main", // Change to any color you like
+                    opacity: 1, // Ensure the color is fully applied
+                  },
+                  "& .MuiInputBase-input": {
+                    color: "blue", // Change text color
+                  },
                 }}
               />
               <IconButton color="primary">
@@ -197,11 +231,12 @@ const Chat = () => {
             alignItems="center"
             sx={{ backgroundColor: "white" }}
           >
+            {/* ChatSphere Logo */}
             <img
-              src="/logo.png"
+              src="/logo.png" // Update the path if needed
               alt="ChatSphere Logo"
               style={{
-                width: "50px",
+                width: "50px", // Adjust size as needed
                 height: "auto",
                 marginBottom: "20px",
                 marginRight: "10px",
@@ -228,7 +263,6 @@ const Chat = () => {
         )}
       </Box>
 
-      {/* New Chat Dialog */}
       <Dialog
         open={openNewChatDialog}
         onClose={() => setOpenNewChatDialog(false)}
