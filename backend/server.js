@@ -1,22 +1,21 @@
-const express = require("express");
-const mongoose = require("mongoose");
-const dotenv = require("dotenv");
-const cors = require("cors");
-const userRoutes = require("./routes/userRoutes");
-const chatRoutes = require("./routes/chatRoutes");
+import express, { json } from "express";
+import { connect, connection } from "mongoose";
+import { config } from "dotenv";
+import cors from "cors";
+import userRoutes from "./routes/userRoutes";
+import chatRoutes from "./routes/chatRoutes";
 
-dotenv.config(); // Load environment variables
+config(); // Load environment variables
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors({ origin: "*", credentials: true })); // Adjust origin as needed
-app.use(express.json()); // Parses incoming JSON requests
+app.use(json()); // Parses incoming JSON requests
 
 // MongoDB Connection
-mongoose
-  .connect(process.env.MONGO_URI)
+connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB connected"))
   .catch((err) => {
     console.error("❌ MongoDB connection error:", err);
@@ -40,7 +39,7 @@ const server = app.listen(PORT, () => {
 // Graceful Shutdown Handling
 process.on("SIGINT", async () => {
   console.log("⚠️ Server shutting down...");
-  await mongoose.connection.close();
+  await connection.close();
   console.log("✅ MongoDB connection closed.");
   process.exit(0);
 });
