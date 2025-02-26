@@ -82,3 +82,33 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+/* Prevent browser default highlight color */
+*::selection {
+  background: #747bff;
+  color: #64ffda; /* Ensures text remains readable */
+}
+
+/* Prevent autofill styles from overriding theme */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
+  background-color: transparent !important;
+  -webkit-box-shadow: 0 0 0px 1000px #f0f8ff inset !important; /* Match your theme */
+  box-shadow: 0 0 0px 1000px #f0f8ff inset !important;
+  -webkit-text-fill-color: #0a192f !important; /* Force text color */
+  color: #0a192f !important; /* Ensure text remains visible */
+}
+
+/* Ensure normal text color is consistent */
+input,
+textarea,
+select {
+  color: #0a192f !important;
+}
