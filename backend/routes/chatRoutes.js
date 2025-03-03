@@ -1,20 +1,24 @@
-// chatRoutes.js
 const express = require("express");
 const {
   createChat,
   sendMessage,
   getMessages,
+  getUserChats,
+  verifyToken, // Middleware for authentication
 } = require("../controllers/chatController");
 
 const router = express.Router();
 
-// Route to create a chat
-router.post("/create", createChat);
+// Route to create a chat (Authenticated)
+router.post("/create", verifyToken, createChat);
 
-// Route to send a message
-router.post("/send", sendMessage);
+// Route to send a message (Authenticated)
+router.post("/send", verifyToken, sendMessage);
 
-// Route to get all messages in a chat
-router.get("/messages/:chatId", getMessages);
+// Route to get all messages in a chat (Authenticated)
+router.get("/messages/:chatId", verifyToken, getMessages);
+
+// Get all chats for the logged-in user
+router.get("/chats", verifyToken, getUserChats);
 
 module.exports = router;
