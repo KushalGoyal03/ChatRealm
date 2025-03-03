@@ -1,4 +1,5 @@
-import { Schema, model } from "mongoose";
+const mongoose = require("mongoose");
+const { Schema, model } = mongoose;
 
 // User Schema
 const userSchema = new Schema({
@@ -10,29 +11,29 @@ const userSchema = new Schema({
 const User = model("User", userSchema);
 
 // Chat Schema
-const chatSchema = new mongoose.Schema({
-  participants: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+const chatSchema = new Schema({
+  participants: [{ type: Schema.Types.ObjectId, ref: "User" }],
   createdAt: { type: Date, default: Date.now },
 });
 
 const Chat = model("Chat", chatSchema);
 
 // Message Schema
-const messageSchema = new mongoose.Schema({
+const messageSchema = new Schema({
   chatId: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: "Chat",
     required: true,
     index: true,
   },
-  sender: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  sender: { type: Schema.Types.ObjectId, ref: "User", required: true },
   content: { type: String, required: true },
   timestamp: { type: Date, default: Date.now },
 });
 
 const Message = model("Message", messageSchema);
 
-export default { User, Chat, Message };
+module.exports = { User, Chat, Message };
 
 // const mongoose = require("mongoose");
 
