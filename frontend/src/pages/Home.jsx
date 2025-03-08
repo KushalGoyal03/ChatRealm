@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Box } from "@mui/material";
-import Login from "../components/Login";
-import Register from "../components/Register";
+import Login from "../components/authentication/Login";
+import Register from "../components/authentication/Register";
 
 const Home = () => {
   const [showLogin, setShowLogin] = useState(true);

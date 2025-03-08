@@ -9,24 +9,29 @@ import {
   IconButton,
   InputAdornment,
   CircularProgress,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import {
   Visibility,
   VisibilityOff,
   EmailOutlined,
+  PersonOutline,
   LockOutlined,
 } from "@mui/icons-material";
-import { isValidEmail } from "../utils/validateEmail";
-import API_ENDPOINTS from "../helpers/constants";
+import { isValidEmail } from "../../utils/validateEmail";
+import API_ENDPOINTS from "../../helpers/constants";
 
-const Login = ({ toggleForm }) => {
+const Register = ({ toggleForm }) => {
   const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState(false);
 
-  const handleLogin = async () => {
+  const handleRegister = async () => {
     if (!isValidEmail(email)) {
       setErrorMessage("Please enter a valid email");
       return;
@@ -35,19 +40,19 @@ const Login = ({ toggleForm }) => {
     setLoading(true);
 
     try {
-      const response = await fetch(API_ENDPOINTS.LOGIN, {
+      const response = await fetch(API_ENDPOINTS.REGISTER, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, username, password }),
       });
 
       const data = await response.json();
 
-      if (response.status === 200) {
-        sessionStorage.setItem("token", data.token);
-        window.location.href = "/chat"; // Navigate to chat
+      if (response.status === 201) {
+        setSuccessMessage(true);
+        setTimeout(() => toggleForm(), 2000);
       } else {
-        setErrorMessage(data.message || "Login failed. Try again.");
+        setErrorMessage(data.message || "Registration failed. Try again.");
       }
     } catch (error) {
       setErrorMessage("Something went wrong. Please try again.");
@@ -61,17 +66,17 @@ const Login = ({ toggleForm }) => {
       textAlign="center"
       sx={{
         width: "80%",
-        marginTop: "-100px",
-        input: { color: "primary.main" }, // Text color inside the input
+        marginTop: "-50px",
+        input: { color: "primary.main" },
         "& .MuiInputLabel-root": { color: "primary.main" },
         "& .MuiOutlinedInput-root": {
           "& fieldset": { borderColor: "primary.main" },
           "&:hover fieldset": {
-            borderColor: "primary.main", // Border color on hover
+            borderColor: "primary.main",
             borderWidth: "2px",
           },
           "&.Mui-focused fieldset": {
-            borderColor: "primary.main", // Border color on hover
+            borderColor: "primary.main",
             borderWidth: "2px",
           },
         },
@@ -92,10 +97,10 @@ const Login = ({ toggleForm }) => {
         variant="h4"
         sx={{ color: "primary.main", fontWeight: "bold", mb: 2 }}
       >
-        Welcome to ChatSphere
+        Join ChatSphere
       </Typography>
 
-      {/* Email Input */}
+      {/* Inputs */}
       <TextField
         label="Email"
         fullWidth
@@ -110,8 +115,20 @@ const Login = ({ toggleForm }) => {
           ),
         }}
       />
-
-      {/* Password Input */}
+      <TextField
+        label="Username"
+        fullWidth
+        margin="normal"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <PersonOutline color="primary" />
+            </InputAdornment>
+          ),
+        }}
+      />
       <TextField
         label="Password"
         type={showPassword ? "text" : "password"}
@@ -127,10 +144,7 @@ const Login = ({ toggleForm }) => {
           ),
           endAdornment: (
             <InputAdornment position="end">
-              <IconButton
-                onClick={() => setShowPassword(!showPassword)}
-                edge="end"
-              >
+              <IconButton onClick={() => setShowPassword(!showPassword)}>
                 {showPassword ? <VisibilityOff /> : <Visibility />}
               </IconButton>
             </InputAdornment>
@@ -138,22 +152,16 @@ const Login = ({ toggleForm }) => {
         }}
       />
 
-      {/* Login Button */}
       <Button
         variant="contained"
         color="primary"
         fullWidth
-        onClick={handleLogin}
+        onClick={handleRegister}
         sx={{ mt: 2 }}
         disabled={loading}
       >
-        {loading ? (
-          <CircularProgress size={24} sx={{ color: "secondary.main" }} />
-        ) : (
-          "Login"
-        )}
+        {loading ? <CircularProgress size={24} /> : "Sign Up"}
       </Button>
-
       {/* Error Message */}
       {errorMessage && (
         <Typography variant="body2" sx={{ mt: 2, color: "error.main" }}>
@@ -161,16 +169,31 @@ const Login = ({ toggleForm }) => {
         </Typography>
       )}
 
-      {/* Switch to Register */}
       <Typography
         variant="body2"
         sx={{ mt: 2, color: "primary.main", cursor: "pointer" }}
         onClick={toggleForm}
       >
-        Don&#39;t have an account? <strong>Sign up here</strong>
+        Already registered? <strong>Sign in here</strong>
       </Typography>
+
+      {/* Snackbar for Success Message */}
+      <Snackbar
+        open={successMessage}
+        autoHideDuration={3000}
+        onClose={() => setSuccessMessage(false)}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          severity="success"
+          onClose={() => setSuccessMessage(false)}
+          sx={{ width: "100%" }}
+        >
+          Registration successful! Redirecting to login...
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
 
-export default Login;
+export default Register;

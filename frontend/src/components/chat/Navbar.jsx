@@ -19,7 +19,7 @@ import LogoutIcon from "@mui/icons-material/ExitToApp";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import SettingsIcon from "@mui/icons-material/Settings";
-import API_ENDPOINTS from "../helpers/constants";
+import API_ENDPOINTS from "../../helpers/constants";
 
 const Navbar = ({ setIsLoggedIn }) => {
   const location = useLocation();
