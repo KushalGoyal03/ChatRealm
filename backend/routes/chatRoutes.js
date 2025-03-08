@@ -4,8 +4,9 @@ const {
   sendMessage,
   getMessages,
   getUserChats,
-  verifyToken, // Middleware for authentication
 } = require("../controllers/chatController");
+
+const { verifyToken } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 

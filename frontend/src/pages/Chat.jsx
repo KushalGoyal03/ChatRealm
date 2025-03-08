@@ -131,13 +131,21 @@ const Chat = () => {
           <Menu
             anchorEl={menuAnchor}
             open={Boolean(menuAnchor)}
-            onClose={handleMenuClose}
+            onClose={() => {
+              handleMenuClose();
+              setTimeout(() => menuAnchor?.blur(), 0);
+            }}
             PaperProps={{
               sx: {
-                borderRadius: 2,
-                boxShadow: 3,
-                backgroundColor: "primary",
+                borderRadius: 2, // Rounded corners
+                boxShadow: 4, // Subtle shadow
+                backgroundColor: "primary.main", // Ensure correct MUI theme usage
                 minWidth: 180,
+                border: "2px solid #1976d2", // Custom blue border
+                transition: "border-color 0.3s ease-in-out", // Smooth effect
+                "&:hover": {
+                  borderColor: "secondary.main", // Border changes to red on hover
+                },
               },
             }}
           >

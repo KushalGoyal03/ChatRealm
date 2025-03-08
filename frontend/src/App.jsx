@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ThemeProvider, CssBaseline, Container } from "@mui/material";
+import { ThemeProvider, CssBaseline } from "@mui/material";
 import theme from "./helpers/theme";
 import {
   BrowserRouter as Router,
@@ -9,8 +9,7 @@ import {
 } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
+import Home from "./pages/Home";
 import Chat from "./pages/Chat";
 
 const App = () => {
@@ -22,7 +21,6 @@ const App = () => {
     const checkAuth = () => {
       setIsLoggedIn(!!sessionStorage.getItem("token"));
     };
-    // Listen for changes in sessionStorage (not across tabs)
     window.addEventListener("storage", checkAuth);
     return () => window.removeEventListener("storage", checkAuth);
   }, []);
@@ -31,52 +29,24 @@ const App = () => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
-        {isLoggedIn && <Navbar setIsLoggedIn={setIsLoggedIn} />}
-        <Container
-          maxWidth="md"
-          sx={{
-            backgroundColor: "background.default",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            alignItems: "center",
-            minHeight: "100vh",
-            padding: 0,
-          }}
-        >
+        {!isLoggedIn ? (
           <Routes>
-            <Route path="/" element={<Navigate to="/login" />} />
             <Route
-              path="/login"
-              element={
-                isLoggedIn ? (
-                  <Navigate to="/chat" />
-                ) : (
-                  <Login setIsLoggedIn={setIsLoggedIn} />
-                )
-              }
+              path="/home"
+              element={<Home setIsLoggedIn={setIsLoggedIn} />}
             />
-            <Route
-              path="/register"
-              element={
-                isLoggedIn ? (
-                  <Navigate to="/chat" />
-                ) : (
-                  <Register setIsLoggedIn={setIsLoggedIn} />
-                )
-              }
-            />
-            <Route
-              path="/chat"
-              element={isLoggedIn ? <Chat /> : <Navigate to="/login" />}
-            />
-            <Route
-              path="*"
-              element={<Navigate to={isLoggedIn ? "/chat" : "/login"} />}
-            />
+            <Route path="*" element={<Navigate to="/home" />} />
           </Routes>
-        </Container>
-        {isLoggedIn && <Footer />}
+        ) : (
+          <>
+            <Navbar setIsLoggedIn={setIsLoggedIn} />
+            <Routes>
+              <Route path="/chat" element={<Chat />} />
+              <Route path="*" element={<Navigate to="/chat" />} />
+            </Routes>
+            <Footer />
+          </>
+        )}
       </Router>
     </ThemeProvider>
   );

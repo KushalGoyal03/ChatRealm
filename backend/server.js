@@ -11,7 +11,12 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors({ origin: "*", credentials: true })); // Adjust origin as needed
+app.use(
+  cors({
+    origin: "http://localhost:3000", // Allow frontend origin
+    credentials: true, // Allow cookies and authentication headers
+  })
+); // Adjust origin as needed
 app.use(express.json()); // Parses incoming JSON requests
 
 // MongoDB Connection
