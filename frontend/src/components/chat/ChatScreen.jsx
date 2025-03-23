@@ -19,11 +19,11 @@ const ChatScreen = ({ selectedChat, setSelectedChat }) => {
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
-    if (!selectedChat?._id) return; // Prevent API call if no chat is selected
+    if (!selectedChat?._id) return;
 
     const fetchMessages = async () => {
       setLoading(true);
-      const token = sessionStorage.getItem("token"); // ✅ Fetch token inside function
+      const token = sessionStorage.getItem("token");
       if (!token) {
         console.error("No token found, cannot fetch messages.");
         setLoading(false);
@@ -39,12 +39,10 @@ const ChatScreen = ({ selectedChat, setSelectedChat }) => {
           }
         );
 
+        if (!response.ok) throw new Error("Failed to fetch messages");
+
         const data = await response.json();
-        if (response.ok) {
-          setMessages(Array.isArray(data) ? data : []);
-        } else {
-          console.error("Error fetching messages:", data.message);
-        }
+        setMessages(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error("Error fetching messages:", error);
       } finally {
@@ -53,7 +51,7 @@ const ChatScreen = ({ selectedChat, setSelectedChat }) => {
     };
 
     fetchMessages();
-  }, [selectedChat]); // ✅ Removed token from dependencies
+  }, [selectedChat]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -161,9 +159,11 @@ const ChatScreen = ({ selectedChat, setSelectedChat }) => {
                     variant="body1"
                     sx={{ fontWeight: "bold", color: "#333" }}
                   >
-                    {msg.sender?.username || msg.sender}
+                    {msg.sender?.username || "Unknown"}
                   </Typography>
-                  <Typography variant="body2">{msg.content}</Typography>
+                  <Typography variant="body2" sx={{ color: "primary.main" }}>
+                    {msg.content}
+                  </Typography>
                 </Box>
               ))
             ) : (

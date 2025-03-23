@@ -125,7 +125,6 @@ const getChatMessages = async (req, res) => {
     if (!messages.length) {
       return res.status(200).json([]); // Explicitly return an empty array
     }
-    console.log("Fetched Messages for Chat ID:", chatId, messages); // Log messages
 
     res.status(200).json(messages);
   } catch (error) {
