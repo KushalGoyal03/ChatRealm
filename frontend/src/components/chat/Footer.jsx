@@ -11,9 +11,10 @@ const Footer = () => {
         padding: "1.2rem 0",
         position: "fixed",
         bottom: 0,
-        left: 0, // Ensures it starts from the left
-        right: 0, // Ensures it stretches to the right
-        width: "100vw", // Forces full viewport width
+        left: 0,
+        right: 0,
+        width: "100vw",
+        boxShadow: "0px -4px 20px rgba(0, 150, 255, 0.5)",
       }}
     >
       <Typography variant="body2">

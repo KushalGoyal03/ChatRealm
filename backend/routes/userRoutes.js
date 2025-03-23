@@ -1,22 +1,15 @@
 // userRoutes.js
 const express = require("express");
 const router = express.Router();
-const { User } = require("../models/model");
-const {
-  registerUser,
-  loginUser,
-  getUsers,
-} = require("../controllers/userController");
-const { verifyToken } = require("../middleware/authMiddleware");
+const User = require("../models/userModel");
+const { registerUser, loginUser } = require("../controllers/userController");
+const verifyToken = require("../middleware/authMiddleware");
 
 // Register Route
 router.post("/register", registerUser);
 
 // Login Route
 router.post("/login", loginUser);
-
-//Get all users
-router.get("/users", getUsers);
 
 //fetch username
 router.get("/profile", verifyToken, async (req, res) => {

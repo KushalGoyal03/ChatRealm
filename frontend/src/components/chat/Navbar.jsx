@@ -9,15 +9,13 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  IconButton,
   Button,
 } from "@mui/material";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import LogoutIcon from "@mui/icons-material/ExitToApp";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 
 const Navbar = ({ setIsLoggedIn }) => {
-  const location = useLocation();
   const navigate = useNavigate();
   const [openDialog, setOpenDialog] = useState(false);
 
@@ -31,7 +29,12 @@ const Navbar = ({ setIsLoggedIn }) => {
     <>
       <AppBar
         position="fixed"
-        sx={{ bgcolor: "primary.main", width: "100vw", top: 0 }}
+        sx={{
+          bgcolor: "primary.main",
+          width: "100vw",
+          top: 0,
+          boxShadow: "0px 4px 20px rgba(0, 150, 255, 0.5)",
+        }}
       >
         <Toolbar>
           {/* Logo */}
@@ -48,30 +51,36 @@ const Navbar = ({ setIsLoggedIn }) => {
 
           {/* Logout Button */}
           {location.pathname === "/chat" && (
-            <IconButton
-              color="inherit"
+            <Button
               onClick={() => setOpenDialog(true)}
+              startIcon={<LogoutIcon />}
               sx={{
                 display: "flex",
                 alignItems: "center",
-                gap: 1, // Adds spacing between icon and text
-                px: 2, // Adds horizontal padding
-                py: 1, // Adds vertical padding
-                borderRadius: "20px", // Rounded button
+                gap: 1,
+                px: 2,
+                py: 1,
+                borderRadius: "20px",
+                fontWeight: 500,
                 transition: "all 0.3s ease",
                 bgcolor: "secondary.main",
                 color: "primary.main",
+                boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
                 "&:hover": {
-                  bgcolor: "rgba(255, 255, 255, 0.1)", // Subtle background highlight on hover
-                  color: "primary.main", // Soft color change on hover
+                  bgcolor: "primary.light",
+                  color: "white",
+                  fontWeight: 800,
+                  transform: "scale(1.05)",
+                  boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)",
+                },
+                "&:active": {
+                  transform: "scale(0.98)",
+                  boxShadow: "0px 2px 6px rgba(0, 0, 0, 0.2)",
                 },
               }}
             >
-              <LogoutIcon sx={{ fontSize: 28 }} />
-              <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                Logout
-              </Typography>
-            </IconButton>
+              Logout
+            </Button>
           )}
         </Toolbar>
       </AppBar>

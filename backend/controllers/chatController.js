@@ -1,351 +1,253 @@
-const { User, Chat, Message } = require("../models/model");
-const jwt = require("jsonwebtoken");
+const Chat = require("../models/chatModel");
+const User = require("../models/userModel");
+const Message = require("../models/messageModel");
 
-// Get all chats for a logged-in user
-const getUserChats = async (req, res) => {
-  try {
-    const userEmail = req.user.email; // Logged-in user email
-
-    // Find chats where the user is a participant
-    const chats = await Chat.find({ participants: userEmail })
-      .populate("participants", "username email")
-      .sort({ updatedAt: -1 });
-
-    return res.status(200).json(chats);
-  } catch (error) {
-    return res
-      .status(500)
-      .json({ message: "Server error", error: error.message });
-  }
-};
-
-// Create Chat
+// Create a new chat
 const createChat = async (req, res) => {
-  const userEmail1 = req.user.email; // Logged-in user email
-  const { userEmail2 } = req.body; // Recipient email
-
   try {
-    if (userEmail1 === userEmail2) {
-      return res.status(400).json({ message: "You cannot chat with yourself" });
-      console.log(userEmail1);
+    const { recipientEmail, customName } = req.body;
+    const senderId = req.user.id;
+
+    if (!recipientEmail?.trim()) {
+      return res.status(400).json({ message: "Recipient email is required" });
     }
 
-    const user1 = await User.findOne({ email: userEmail1 });
-    const user2 = await User.findOne({ email: userEmail2 });
+    // Find recipient
+    const recipient = await User.findOne({ email: recipientEmail.trim() });
 
-    if (!user1 || !user2) {
-      return res.status(404).json({ message: "User not found" });
+    if (!recipient) {
+      return res.status(404).json({ message: "Recipient not found" });
     }
 
-    // Check if chat already exists
+    if (recipient._id.toString() === senderId) {
+      return res
+        .status(400)
+        .json({ message: "Cannot start a chat with yourself" });
+    }
+
+    // Check if chat exists
     let chat = await Chat.findOne({
-      participants: { $all: [userEmail1, userEmail2], $size: 2 },
+      participants: { $all: [senderId, recipient._id] },
     });
 
-    if (!chat) {
-      chat = new Chat({ participants: [userEmail1, userEmail2] });
-      await chat.save();
+    if (chat) {
+      // If a new custom name is provided, update it
+      if (customName?.trim() && chat.chatName !== customName.trim()) {
+        chat.chatName = customName.trim();
+        await chat.save();
+      }
+      return res.status(200).json(chat);
     }
 
-    return res.status(200).json({ chat, message: "Chat created successfully" });
+    // Create new chat
+    chat = new Chat({
+      participants: [senderId, recipient._id],
+      chatName: customName?.trim() || recipient.username,
+      messages: [],
+    });
+
+    await chat.save();
+    res.status(201).json(chat);
   } catch (error) {
-    return res
-      .status(500)
-      .json({ message: "Server error", error: error.message });
+    console.error("Chat creation failed:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
-// Send Message
-const sendMessage = async (req, res) => {
-  const { chatId, content } = req.body;
-  const senderEmail = req.user.email; // Logged-in user email
-
+// Get all chats for the logged-in user
+const getUserChats = async (req, res) => {
   try {
+    const userId = req.user.id;
+
+    const chats = await Chat.find({ participants: userId })
+      .populate("participants", "username email")
+      .populate({
+        path: "messages",
+        select: "content createdAt sender",
+        options: { limit: 1 }, // Fetch latest message
+      })
+      .lean();
+
+    res.status(200).json(chats);
+  } catch (error) {
+    console.error("Fetching chats failed:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// Send a message in a chat
+const sendMessage = async (req, res) => {
+  try {
+    const { chatId, content } = req.body;
+    const senderId = req.user.id;
+
     const chat = await Chat.findById(chatId);
     if (!chat) {
       return res.status(404).json({ message: "Chat not found" });
     }
 
-    if (!chat.participants.includes(senderEmail)) {
-      return res.status(403).json({ message: "You are not part of this chat" });
+    if (!chat.participants.includes(senderId)) {
+      return res
+        .status(403)
+        .json({ message: "You are not a participant in this chat" });
     }
 
     const newMessage = new Message({
-      chatId,
-      sender: senderEmail,
+      chat: chatId,
+      sender: senderId,
       content,
-      timestamp: new Date(),
     });
 
     await newMessage.save();
-
-    // Update chat's last activity
-    chat.updatedAt = new Date();
+    chat.messages.push(newMessage._id);
     await chat.save();
 
-    return res.status(201).json({ message: "Message sent", newMessage });
+    const populatedMessage = await newMessage.populate(
+      "sender",
+      "username email"
+    );
+    res.status(201).json(populatedMessage);
   } catch (error) {
-    return res
-      .status(500)
-      .json({ message: "Server error", error: error.message });
+    console.error("Message sending failed:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
-// Get Messages for a Chat
-const getMessages = async (req, res) => {
-  const { chatId } = req.params;
-
+// Get all messages for a chat
+const getChatMessages = async (req, res) => {
   try {
-    const messages = await Message.find({ chatId })
-      .sort({ timestamp: 1 })
-      .populate("sender", "username email");
+    const { chatId } = req.params;
 
-    return res.status(200).json(messages);
+    const messages = await Message.find({ chat: chatId })
+      .populate("sender", "username email")
+      .sort({ createdAt: 1 }); // Keep oldest first (change to -1 for newest first)
+
+    if (!messages.length) {
+      return res.status(200).json([]); // Explicitly return an empty array
+    }
+    console.log("Fetched Messages for Chat ID:", chatId, messages); // Log messages
+
+    res.status(200).json(messages);
   } catch (error) {
-    return res
-      .status(500)
-      .json({ message: "Server error", error: error.message });
+    console.error("Fetching messages failed:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
 module.exports = {
-  getUserChats,
   createChat,
+  getUserChats,
   sendMessage,
-  getMessages,
+  getChatMessages,
 };
 
-// const { User, Chat, Message } = require("../models/model");
-// const jwt = require("jsonwebtoken");
+// const Chat = require("../models/chatModel");
+// const User = require("../models/userModel");
+// const Message = require("../models/messageModel");
 
-// // Middleware to verify JWT and extract user info
-// const verifyToken = (req, res, next) => {
-//   const token = req.headers.authorization?.split(" ")[1];
-//   if (!token) {
-//     return res.status(401).json({ message: "Unauthorized: No token provided" });
-//   }
-
-//   try {
-//     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-//     req.user = decoded; // Store user details in req.user
-//     next();
-//   } catch (error) {
-//     return res.status(401).json({ message: "Invalid token" });
-//   }
-// };
-
-// // Create Chat
+// // Create a new chat
 // const createChat = async (req, res) => {
-//   const userId1 = req.user.email; // Logged-in user
-//   const { userId2 } = req.body; // Recipient email
-
 //   try {
-//     console.log("Creating chat with users:", userId1, userId2);
+//     const { recipientEmail } = req.body;
+//     const senderId = req.user.id; // Extracted from JWT token
 
-//     if (userId1 === userId2) {
-//       return res.status(400).json({ message: "You cannot chat with yourself" });
+//     // Check if recipient exists
+//     const recipient = await User.findOne({ email: recipientEmail });
+//     if (!recipient) {
+//       return res.status(404).json({ message: "Recipient not found" });
 //     }
-
-//     // Fetch users by email
-//     const user1 = await User.findOne({ email: userId1 });
-//     const user2 = await User.findOne({ email: userId2 });
-
-//     if (!user1 || !user2) {
-//       return res.status(404).json({ message: "User not found" });
-//     }
-
-//     // Sort users by ObjectId to ensure uniqueness
-//     const sortedUsers = [user1._id, user2._id].sort();
 
 //     // Check if chat already exists
-//     let chat = await Chat.findOne({
-//       participants: { $all: sortedUsers, $size: 2 },
+//     const existingChat = await Chat.findOne({
+//       participants: { $all: [senderId, recipient._id] },
 //     });
 
-//     if (!chat) {
-//       chat = new Chat({ participants: sortedUsers });
-//       await chat.save();
+//     if (existingChat) {
+//       return res.status(200).json(existingChat);
 //     }
 
-//     return res.status(200).json({ chat, message: "Chat created successfully" });
+//     // Create a new chat
+//     const newChat = new Chat({
+//       participants: [senderId, recipient._id],
+//       messages: [],
+//     });
+
+//     await newChat.save();
+//     res.status(201).json(newChat);
 //   } catch (error) {
-//     console.error(error);
-//     return res
-//       .status(500)
-//       .json({ message: "Server error", error: error.message });
+//     console.error("Chat creation failed:", error);
+//     res.status(500).json({ message: "Server error" });
 //   }
 // };
 
-// // Send Message
-// const sendMessage = async (req, res) => {
-//   const { chatId, content } = req.body;
-//   const senderEmail = req.user.email; // Logged-in user
-
+// // Get all chats for the logged-in user
+// const getUserChats = async (req, res) => {
 //   try {
+//     const userId = req.user.id;
+
+//     const chats = await Chat.find({ participants: userId })
+//       .populate("participants", "username email")
+//       .populate({
+//         path: "messages",
+//         options: { sort: { createdAt: -1 }, limit: 1 }, // Get latest message
+//       });
+
+//     res.status(200).json(chats);
+//   } catch (error) {
+//     console.error("Fetching chats failed:", error);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };
+
+// // Send a message in a chat
+// const sendMessage = async (req, res) => {
+//   try {
+//     const { chatId, content } = req.body;
+//     const senderId = req.user.id;
+
 //     const chat = await Chat.findById(chatId);
 //     if (!chat) {
 //       return res.status(404).json({ message: "Chat not found" });
 //     }
 
-//     // Fetch sender by email
-//     const sender = await User.findOne({ email: senderEmail });
-//     if (!sender) {
-//       return res.status(404).json({ message: "Sender not found" });
-//     }
-
-//     if (!chat.participants.map(String).includes(String(sender._id))) {
-//       return res.status(403).json({ message: "You are not part of this chat" });
-//     }
-
 //     const newMessage = new Message({
-//       chatId,
-//       sender: sender._id,
+//       chat: chatId,
+//       sender: senderId,
 //       content,
 //     });
 
 //     await newMessage.save();
 
-//     return res.status(201).json({ message: "Message sent", newMessage });
+//     // Add message reference to chat
+//     chat.messages.push(newMessage._id);
+//     await chat.save();
+
+//     res.status(201).json(newMessage);
 //   } catch (error) {
-//     return res
-//       .status(500)
-//       .json({ message: "Server error", error: error.message });
+//     console.error("Message sending failed:", error);
+//     res.status(500).json({ message: "Server error" });
 //   }
 // };
 
-// // Get Messages
-// const getMessages = async (req, res) => {
-//   const { chatId } = req.params;
-
+// // Get all messages for a chat
+// const getChatMessages = async (req, res) => {
 //   try {
-//     const messages = await Message.find({ chatId })
-//       .sort({ timestamp: 1 })
-//       .populate("sender", "username email");
+//     const { chatId } = req.params;
 
-//     return res.status(200).json(messages);
+//     const messages = await Message.find({ chat: chatId })
+//       .populate("sender", "username email")
+//       .sort({ createdAt: 1 });
+
+//     res.status(200).json(messages);
 //   } catch (error) {
-//     return res
-//       .status(500)
-//       .json({ message: "Server error", error: error.message });
+//     console.error("Fetching messages failed:", error);
+//     res.status(500).json({ message: "Server error" });
 //   }
 // };
 
 // module.exports = {
-//   verifyToken,
 //   createChat,
+//   getUserChats,
 //   sendMessage,
-//   getMessages,
+//   getChatMessages,
 // };
-
-// // chatController.js
-// const { User, Chat, Message } = require("../models/model");
-
-// // Create Chat
-// const createChat = async (req, res) => {
-//   const { userId1, userId2 } = req.body; // These are emails, not ObjectIds
-
-//   try {
-//     console.log("Creating chat with users:", userId1, userId2); // Log incoming data
-
-//     if (userId1 === userId2) {
-//       return res.status(400).json({ message: "You cannot chat with yourself" });
-//     }
-
-//     // Fetch users by email
-//     const user1 = await User.findOne({ email: userId1 });
-//     const user2 = await User.findOne({ email: userId2 });
-
-//     if (!user1 || !user2) {
-//       return res.status(404).json({ message: "User not found" });
-//     }
-
-//     console.log("Found users:", user1, user2); // Log the found users
-
-//     // Ensure consistent ordering of users by their ObjectIds
-//     const sortedUsers = [user1._id, user2._id].sort();
-//     console.log("Sorted users' ObjectIds:", sortedUsers); // Log sorted user IDs
-
-//     // Check if chat already exists by comparing the ObjectIds
-//     let chat = await Chat.findOne({ participants: { $all: sortedUsers } });
-
-//     if (!chat) {
-//       // Create a new chat with the sorted user IDs
-//       chat = new Chat({ participants: sortedUsers });
-//       await chat.save();
-//     }
-
-//     return res.status(200).json({ chat, message: "Chat created successfully" });
-//   } catch (error) {
-//     console.error(error); // Log error for debugging
-//     return res
-//       .status(500)
-//       .json({ message: "Server error", error: error.message });
-//   }
-// };
-
-// // Send Message
-// const sendMessage = async (req, res) => {
-//   const { chatId, senderId, message } = req.body;
-
-//   try {
-//     const chat = await Chat.findById(chatId);
-//     if (!chat) {
-//       return res.status(404).json({ message: "Chat not found" });
-//     }
-
-//     if (!chat.users.includes(senderId)) {
-//       return res.status(403).json({ message: "You are not part of this chat" });
-//     }
-
-//     const sender = await User.findById(senderId);
-//     if (!sender) {
-//       return res.status(404).json({ message: "Sender not found" });
-//     }
-
-//     const newMessage = new Message({
-//       chatId,
-//       senderId,
-//       message,
-//       timestamp: new Date(),
-//     });
-
-//     await newMessage.save();
-
-//     return res.status(201).json({ message: "Message sent", newMessage });
-//   } catch (error) {
-//     return res
-//       .status(500)
-//       .json({ message: "Server error", error: error.message });
-//   }
-// };
-
-// // Get Messages
-// const getMessages = async (req, res) => {
-//   const { chatId } = req.params;
-
-//   try {
-//     const messages = await Message.find({ chatId })
-//       .sort({ createdAt: 1 })
-//       .populate("senderId", "username email"); // Populate sender details
-
-//     return res.status(200).json(messages);
-//   } catch (error) {
-//     return res
-//       .status(500)
-//       .json({ message: "Server error", error: error.message });
-//   }
-// };
-
-// // Get all users (for chat feature)
-// const getUsers = async (req, res) => {
-//   try {
-//     const users = await User.find({}, "id username email"); // Return only necessary fields
-//     return res.status(200).json(users);
-//   } catch (error) {
-//     return res
-//       .status(500)
-//       .json({ message: "Server error", error: error.message });
-//   }
-// };
-
-// module.exports = { createChat, sendMessage, getMessages, getUsers };
