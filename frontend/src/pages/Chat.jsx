@@ -83,6 +83,7 @@ const Chat = () => {
         <ChatScreen
           selectedChat={selectedChat}
           setSelectedChat={setSelectedChat}
+          setChats={setChats}
         />
       )}
     </Box>
@@ -90,39 +91,3 @@ const Chat = () => {
 };
 
 export default Chat;
-
-// import { useState } from "react";
-// import { Box } from "@mui/material";
-// import Sidebar from "../components/chat/Sidebar";
-// import ChatScreen from "../components/chat/ChatScreen";
-
-// const Chat = () => {
-//   const [selectedChat, setSelectedChat] = useState(null);
-//   const [chats, setChats] = useState([]);
-
-//   return (
-//     <Box
-//       display="flex"
-//       width="100vw"
-//       height="100vh"
-//       sx={{
-//         pt: 8.6, // Adjust for Navbar spacing
-//         pb: 7.4, // Adjust for Footer spacing
-//       }}
-//     >
-//       <Sidebar
-//         chats={chats}
-//         setChats={setChats}
-//         selectedChat={selectedChat}
-//         setSelectedChat={setSelectedChat}
-//       />
-
-//       <ChatScreen
-//         selectedChat={selectedChat}
-//         setSelectedChat={setSelectedChat}
-//       />
-//     </Box>
-//   );
-// };
-
-// export default Chat;
