@@ -45,6 +45,8 @@ const Login = ({ toggleForm }) => {
 
       if (response.status === 200) {
         sessionStorage.setItem("token", data.token);
+        sessionStorage.setItem("userEmail", data.user.email);
+        sessionStorage.setItem("user", JSON.stringify(data.user));
         window.location.href = "/chat"; // Navigate to chat
       } else {
         setErrorMessage(data.message || "Login failed. Try again.");
