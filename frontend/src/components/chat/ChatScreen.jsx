@@ -174,29 +174,58 @@ const ChatScreen = ({ selectedChat, setSelectedChat, setChats }) => {
             alignItems="center"
             p={1.5}
             sx={{
-              backgroundColor: "primary.main",
-              color: "white",
-              borderBottom: "2px solid #ddd",
+              backgroundColor: "#1E1E2F", // Soft Black with a Blue Tint
+              color: "#EAEAEA", // Soft White Text
+              borderBottom: "2px solid #00FFFF", // Neon Cyan Border
+              borderRadius: "10px 10px 0 0", // Smooth Rounded Top
+              boxShadow: "0px 2px 6px rgba(0, 0, 0, 0.2)", // Subtle Depth
             }}
           >
             {/* Back Button */}
             <IconButton
               onClick={() => setSelectedChat(null)}
-              sx={{ color: "white", mr: 1 }}
+              sx={{
+                color: "#4682B4", // Soft Blue Accent
+                mr: 1,
+                transition: "color 0.2s ease-in-out",
+                "&:hover": {
+                  color: "#5A9BD5", // Lighter Blue on Hover
+                },
+              }}
               aria-label="Go back to chat list"
             >
               <ArrowBackIcon />
             </IconButton>
 
             {/* Chat Avatar */}
-            <Avatar sx={{ bgcolor: "secondary.main", mr: 2 }}>
+            <Avatar
+              sx={{
+                bgcolor: "#5A9BD5", // Soft Muted Blue
+                mr: 2,
+                width: 40,
+                height: 40,
+                fontSize: "1rem",
+                fontWeight: "bold",
+                boxShadow: "0px 2px 4px rgba(90, 155, 213, 0.3)", // Soft Avatar Depth
+              }}
+            >
               {selectedChat?.chatName?.trim()
                 ? selectedChat.chatName.charAt(0).toUpperCase()
                 : "?"}
             </Avatar>
 
             {/* Chat Name */}
-            <Typography variant="h6">
+            <Typography
+              variant="h6"
+              sx={{
+                fontWeight: "bold",
+                flexGrow: 1,
+                overflow: "hidden",
+                whiteSpace: "nowrap",
+                textOverflow: "ellipsis",
+                color: "#F0F0F0", // Soft Grey for Better Readability
+              }}
+            >
               {selectedChat?.chatName?.trim() || "Unknown Chat"}
             </Typography>
           </Box>
@@ -244,70 +273,128 @@ const ChatScreen = ({ selectedChat, setSelectedChat, setChats }) => {
                         messages[index - 1].createdAt
                       ).toLocaleDateString()
                     : null;
+
                 const showDateSeparator = messageDate !== prevMessageDate;
 
                 return (
                   <React.Fragment key={index}>
+                    {/* Date Separator - Modern Look */}
                     {showDateSeparator && (
-                      <Typography
-                        variant="caption"
+                      <Box
                         sx={{
-                          textAlign: "center",
-                          display: "block",
-                          fontWeight: "bold",
-                          marginY: "10px",
-                          color: "#666",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          marginY: "16px",
                         }}
                       >
-                        {messageDate}
-                      </Typography>
+                        <Box
+                          sx={{
+                            flexGrow: 1,
+                            height: "1px",
+                            backgroundColor: "#ccc",
+                          }}
+                        />
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            backgroundColor: "#f0f0f0",
+                            padding: "6px 14px",
+                            borderRadius: "20px",
+                            fontWeight: "bold",
+                            color: "#444",
+                            fontSize: "0.75rem",
+                            mx: "8px",
+                          }}
+                        >
+                          {messageDate}
+                        </Typography>
+                        <Box
+                          sx={{
+                            flexGrow: 1,
+                            height: "1px",
+                            backgroundColor: "#ccc",
+                          }}
+                        />
+                      </Box>
                     )}
 
+                    {/* Chat Bubble */}
                     <Box
                       sx={{
-                        padding: "10px",
-                        borderRadius: "10px",
-                        marginBottom: "10px",
-                        maxWidth: "60%",
+                        padding: "8px 10px",
+                        borderRadius: isLoggedInUser
+                          ? "18px 18px 4px 18px"
+                          : "18px 18px 18px 4px",
+                        marginBottom: "20px",
+                        maxWidth: "75%",
+                        minWidth: "120px",
                         alignSelf: isLoggedInUser ? "flex-end" : "flex-start",
-                        backgroundColor: isLoggedInUser ? "#dcf8c6" : "#e5e5e5",
+                        backgroundColor: isLoggedInUser ? "#0A84FF" : "#1C1C1E",
+                        color: isLoggedInUser ? "#ffffff" : "#D3D3D3",
+
+                        boxShadow: "0px 8px 20px rgba(0, 0, 0, 0.8)",
+                        backdropFilter: "blur(8px)", // Frosted glass effect
+                        border: "1px solid rgba(255, 255, 255, 0.4)",
                         position: "relative",
+                        transition: "transform 0.3s ease-in-out",
+                        "&:hover": {
+                          transform: "translateY(-4px)", // Lifts on hover
+                        },
+                        animation: "floatBubble 3s ease-in-out infinite",
+                        "@keyframes floatBubble": {
+                          "0%": { transform: "translateY(0px)" },
+                          "50%": { transform: "translateY(-3px)" },
+                          "100%": { transform: "translateY(0px)" },
+                        },
                       }}
                     >
                       <Typography
-                        variant="body1"
-                        sx={{ fontWeight: "bold", color: "#333" }}
+                        variant="body2"
+                        sx={{
+                          fontWeight: "bold",
+                          color: isLoggedInUser ? "#dfffd8" : "#444",
+                          marginBottom: "4px",
+                        }}
                       >
                         {senderName}
                       </Typography>
 
+                      {/* Message Content */}
                       <Typography
                         variant="body2"
-                        sx={{ color: "#333", wordWrap: "break-word" }}
+                        sx={{
+                          wordWrap: "break-word",
+                          lineHeight: 1.5,
+                        }}
                       >
                         {msg.content}
                       </Typography>
 
+                      {/* Timestamp */}
                       <Typography
                         variant="caption"
                         sx={{
                           position: "absolute",
-                          bottom: "-15px",
-                          right: "5px",
-                          fontSize: "0.7rem",
-                          color: isLoggedInUser ? "green" : "gray",
+                          bottom: "-18px",
+                          right: "8px",
+                          fontSize: "0.75rem",
+                          color: isLoggedInUser ? "#c8e6c9" : "#888",
                         }}
                       >
                         {messageTime}
                       </Typography>
 
+                      {/* Seen Status */}
                       {!isLoggedInUser && msg.seen && (
                         <Typography
                           variant="caption"
                           sx={{
-                            color: "blue",
+                            color: "#1e88e5",
                             fontSize: "0.7rem",
                             textAlign: "right",
+                            display: "block",
+                            marginTop: "4px",
                           }}
                         >
                           Seen
@@ -334,7 +421,25 @@ const ChatScreen = ({ selectedChat, setSelectedChat, setChats }) => {
             display="flex"
             alignItems="center"
             p={1}
-            sx={{ backgroundColor: "white", borderTop: "1px solid #ddd" }}
+            sx={{
+              backgroundColor: "#F8F9FA",
+              borderTop: "1px solid #ddd",
+              borderRadius: "0 0 12px 12px", // Slightly rounded at the bottom
+              boxShadow: "0px -2px 6px rgba(0, 0, 0, 0.05)", // Soft top shadow
+              input: { color: "primary.main" }, // Text color inside the input
+              "& .MuiInputLabel-root": { color: "primary.main" },
+              "& .MuiOutlinedInput-root": {
+                "& fieldset": { borderColor: "primary.main" },
+                "&:hover fieldset": {
+                  borderColor: "primary.main", // Border color on hover
+                  borderWidth: "2px",
+                },
+                "&.Mui-focused fieldset": {
+                  borderColor: "primary.main", // Border color on hover
+                  borderWidth: "2px",
+                },
+              },
+            }}
           >
             <TextField
               fullWidth
@@ -351,9 +456,39 @@ const ChatScreen = ({ selectedChat, setSelectedChat, setChats }) => {
                 }
               }}
               aria-label="Type a message"
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: "24px",
+                  backgroundColor: "white",
+                  "& fieldset": { borderColor: "#ccc" },
+                  "&:hover fieldset": {
+                    borderColor: "#007AFF",
+                    borderWidth: "2px",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#007AFF",
+                    borderWidth: "2px",
+                  },
+                },
+                input: { color: "#333", fontSize: "1rem" },
+              }}
             />
+
             <IconButton
-              color="primary"
+              sx={{
+                color: currentMessage.trim() ? "#007AFF" : "#ccc",
+                backgroundColor: currentMessage.trim()
+                  ? "#E3F2FD"
+                  : "transparent",
+                marginLeft: "8px",
+                transition: "all 0.3s ease-in-out",
+                "&:hover": {
+                  backgroundColor: currentMessage.trim()
+                    ? "#BBDEFB"
+                    : "transparent",
+                  transform: "scale(1.1)",
+                },
+              }}
               onClick={handleSendMessage}
               disabled={!currentMessage.trim()}
             >
@@ -368,30 +503,51 @@ const ChatScreen = ({ selectedChat, setSelectedChat, setChats }) => {
           flexDirection="column"
           justifyContent="center"
           alignItems="center"
-          sx={{ backgroundColor: "#f5f5f5" }}
+          sx={{
+            backgroundColor: "#F4F6F", // Subtle bluish-gray for a clean UI
+            textAlign: "center",
+            padding: "20px",
+          }}
         >
+          {/* Logo with Soft Floating Effect */}
           <img
             src="/images/logo.png"
             alt="ChatSphere Logo"
             onError={(e) => (e.target.style.display = "none")} // Hide if image fails to load
             style={{
-              width: "60px",
+              width: "70px",
               height: "auto",
               marginBottom: "15px",
               borderRadius: "50%",
+              boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)", // Light Floating Effect
+              transition: "transform 0.3s ease-in-out",
             }}
+            onMouseEnter={(e) => (e.target.style.transform = "scale(1.05)")}
+            onMouseLeave={(e) => (e.target.style.transform = "scale(1)")}
           />
+
+          {/* Welcome Text */}
           <Typography
             variant="h4"
-            color="primary.main"
-            sx={{ fontWeight: "bold", mb: 1 }}
+            sx={{
+              fontWeight: "bold",
+              color: "#0A84FF", // Light Blue for a Vibrant Look
+              mb: 1,
+              letterSpacing: "0.5px",
+            }}
           >
             Welcome to ChatSphere
           </Typography>
+
+          {/* Subtitle */}
           <Typography
             variant="h6"
-            color="textSecondary"
-            sx={{ fontWeight: "bold" }}
+            sx={{
+              fontWeight: "500",
+              color: "white",
+              maxWidth: "80%",
+              opacity: 0.9, // Slight fade effect
+            }}
           >
             Select a chat to start messaging
           </Typography>

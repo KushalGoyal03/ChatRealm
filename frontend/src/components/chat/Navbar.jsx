@@ -33,7 +33,16 @@ const Navbar = ({ setIsLoggedIn }) => {
           bgcolor: "primary.main",
           width: "100vw",
           top: 0,
-          boxShadow: "0px 4px 20px rgba(0, 150, 255, 0.5)",
+          borderBottom: "4px solid", // Solid Border
+          borderImage: "linear-gradient(90deg, #00FFFF, #FF00FF)", // Neon Gradient
+          borderImageSlice: 1, // Ensures full gradient is applied
+          borderRadius: "10px 10px 0 0",
+          boxShadow: "0px 0px 15px rgba(0, 255, 255, 0.8)", // Soft Glow Effect
+          animation: "neon-glow 3s linear infinite", // Apply Animation
+          "@keyframes neon-glow": {
+            "0%": { boxShadow: "0px 0px 10px #00FFFF" },
+            "50%": { boxShadow: "0px 0px 20px #FF00FF" },
+          },
         }}
       >
         <Toolbar>

@@ -310,7 +310,7 @@ const Sidebar = ({ selectedChat, setSelectedChat }) => {
       }
     } catch (error) {
       console.error("Error renaming chat:", error);
-      alert("Something went wrong!");
+      showSnackbar("Something went wrong!", "error");
     }
   };
 
@@ -371,7 +371,7 @@ const Sidebar = ({ selectedChat, setSelectedChat }) => {
                 border: "2px solid rgba(255, 255, 255, 0.8)", // Active state border
               },
             }}
-            onClick={() => alert("Chat with bot coming soon!")}
+            onClick={() => showSnackbar("Coming Soon!", "info")}
           >
             <SmartToyIcon />
           </IconButton>
@@ -440,7 +440,7 @@ const Sidebar = ({ selectedChat, setSelectedChat }) => {
               {username || "User"}
             </MenuItem>
             <MenuItem
-              onClick={() => alert("Under Construction.")}
+              onClick={() => showSnackbar("Coming Soon!", "info")}
               sx={{
                 "&:hover": {
                   bgcolor: "secondary.main", // Background color on hover
@@ -452,7 +452,7 @@ const Sidebar = ({ selectedChat, setSelectedChat }) => {
             </MenuItem>
 
             <MenuItem
-              onClick={() => alert("Under Construction.")}
+              onClick={() => showSnackbar("Coming Soon!", "info")}
               sx={{
                 color: "secondary.main",
                 "&:hover": {
@@ -526,7 +526,7 @@ const Sidebar = ({ selectedChat, setSelectedChat }) => {
                 </ListItemAvatar>
                 <ListItemText
                   primary={chat.chatName || "Unknown Chat"}
-                  secondary={chat.lastMessage?.content || "No messages yet"}
+                  secondary={chat.lastMessage?.content}
                 />
                 <IconButton
                   size="small"
@@ -794,14 +794,36 @@ const Sidebar = ({ selectedChat, setSelectedChat }) => {
       </Dialog>
       <Snackbar
         open={snackbarOpen}
-        autoHideDuration={3000} // Closes automatically after 3s
+        autoHideDuration={2000} // Extended duration for better readability
         onClose={() => setSnackbarOpen(false)}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }} // Position
+        anchorOrigin={{ vertical: "top", horizontal: "center" }} // Positioned to the top-right for better UX
+        sx={{
+          "& .MuiSnackbarContent-root": {
+            backgroundColor:
+              snackbarSeverity === "success"
+                ? "#4caf50"
+                : snackbarSeverity === "error"
+                ? "#d32f2f"
+                : "#1976d2",
+            color: "white",
+            fontWeight: "bold",
+            boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.3)", // Soft shadow for depth
+            borderRadius: "8px", // Smooth rounded edges
+            padding: "10px 16px",
+            minWidth: "250px", // Prevents shrinking too much
+          },
+        }}
       >
         <Alert
           onClose={() => setSnackbarOpen(false)}
           severity={snackbarSeverity}
-          sx={{ width: "100%" }}
+          variant="filled" // Uses filled variant for better contrast
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            fontSize: "1rem",
+          }}
         >
           {snackbarMessage}
         </Alert>
