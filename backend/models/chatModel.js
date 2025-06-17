@@ -8,22 +8,15 @@ const chatSchema = new mongoose.Schema(
 
     customNames: {
       type: Map,
-      of: String, // Stores custom names per user (userId -> custom name)
+      of: String,
       default: {},
     },
 
     messages: [{ type: mongoose.Schema.Types.ObjectId, ref: "Message" }],
-
-    seenStatus: {
-      type: Map,
-      of: Boolean, // Tracks if a user has seen the latest message (userId -> true/false)
-      default: {},
-    },
   },
   { timestamps: true }
 );
 
-// Add an index for better performance on participant queries
 chatSchema.index({ participants: 1 });
 
 const Chat = mongoose.model("Chat", chatSchema);

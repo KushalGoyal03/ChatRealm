@@ -1,9 +1,11 @@
 /* eslint-disable no-unused-vars */
 import { useState, useEffect, useCallback } from "react";
-import { Box, Typography, CircularProgress } from "@mui/material";
+import { CircularProgress } from "@mui/material";
 import Sidebar from "../components/chat/Sidebar";
 import ChatScreen from "../components/chat/ChatScreen";
-import API_ENDPOINTS from "../helpers/constants"; // Import API endpoints
+import Navbar from "../components/chat/Navbar";
+import API_ENDPOINTS from "../helpers/constants";
+import "../components/styles/Chat.css";
 
 const Chat = () => {
   const [selectedChat, setSelectedChat] = useState(null);
@@ -11,11 +13,9 @@ const Chat = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Function to fetch user chats
   const fetchChats = useCallback(async () => {
     const token = sessionStorage.getItem("token");
-    setLoading(true); // Start loading
-
+    setLoading(true);
     try {
       const response = await fetch(API_ENDPOINTS.GET_CHATS, {
         method: "GET",
@@ -26,14 +26,14 @@ const Chat = () => {
 
       if (response.ok) {
         setChats(data || []);
-        setError(null); // Reset error if successful
+        setError(null);
       } else {
         setError(data.message || "Failed to load chats");
       }
     } catch (error) {
       setError("Unable to connect to the server");
     } finally {
-      setLoading(false); // Stop loading
+      setLoading(false);
     }
   }, []);
 
@@ -42,51 +42,35 @@ const Chat = () => {
   }, [fetchChats]);
 
   return (
-    <Box
-      display="flex"
-      width="100vw"
-      height="100vh"
-      sx={{
-        pt: 8.6, // Adjust for Navbar spacing
-        pb: 7.4, // Adjust for Footer spacing
-      }}
-    >
-      {/* Sidebar for chat list */}
-      <Sidebar
-        chats={chats}
-        setChats={setChats}
-        selectedChat={selectedChat}
-        setSelectedChat={setSelectedChat}
-        refreshChats={fetchChats} // Pass function to refresh chats
-      />
-
-      {/* Main Chat Area */}
-      {loading ? (
-        <Box
-          flex={1}
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-        >
-          <CircularProgress />
-        </Box>
-      ) : error ? (
-        <Box
-          flex={1}
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-        >
-          <Typography color="error">{error}</Typography>
-        </Box>
-      ) : (
-        <ChatScreen
+    <>
+      <Navbar />
+      <div className="chat-wrapper">
+        <Sidebar
+          chats={chats}
+          setChats={setChats}
           selectedChat={selectedChat}
           setSelectedChat={setSelectedChat}
-          setChats={setChats}
+          refreshChats={fetchChats}
         />
-      )}
-    </Box>
+
+        <div className="chat-container">
+          {loading ? (
+            <div className="chat-loading">
+              <CircularProgress />
+            </div>
+          ) : error ? (
+            <div className="chat-error">{error}</div>
+          ) : (
+            <ChatScreen
+              key={selectedChat?._id || "welcome"}
+              selectedChat={selectedChat}
+              setSelectedChat={setSelectedChat}
+              setChats={setChats}
+            />
+          )}
+        </div>
+      </div>
+    </>
   );
 };
 

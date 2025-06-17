@@ -1,0 +1,48 @@
+.auth-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.auth-button {
+  margin-top: 14px !important;
+  background: linear-gradient(to right, #121f64, #98999c) !important;
+  color: white !important;
+  font-weight: bold;
+  border-radius: 16px;
+  padding: 10px;
+}
+
+.auth-button:hover {
+  background: linear-gradient(to right, #080c1f, #535a79) !important;
+}
+
+.auth-error {
+  margin-top: 12px !important;
+  color: rgb(10, 5, 28) !important;
+  text-align: center;
+}
+
+.switch-link {
+  margin-top: 18px !important;
+  color: #dbdbe7cc !important;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.auth-form .MuiInputLabel-root {
+  color: #694f82;
+}
+
+.auth-form .Mui-focused.MuiInputLabel-root {
+  color: #dfd8d8;
+}
+
+.auth-form .MuiInputBase-root input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px rgba(255, 255, 255, 0.01) inset !important;
+  -webkit-text-fill-color: #100e0e !important;
+  transition: background-color 1000s ease-in-out 0s !important;
+  caret-color: white;
+  border-radius: 8px;
+}

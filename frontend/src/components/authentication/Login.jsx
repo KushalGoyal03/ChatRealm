@@ -1,14 +1,13 @@
 /* eslint-disable react/prop-types */
-/* eslint-disable no-unused-vars */
 import { useState } from "react";
 import {
   TextField,
   Button,
-  Typography,
-  Box,
   IconButton,
   InputAdornment,
   CircularProgress,
+  Typography,
+  Box,
 } from "@mui/material";
 import {
   Visibility,
@@ -16,8 +15,8 @@ import {
   EmailOutlined,
   LockOutlined,
 } from "@mui/icons-material";
-import { isValidEmail } from "../../utils/validateEmail";
 import API_ENDPOINTS from "../../helpers/constants";
+import "../styles/Login_Register.css";
 
 const Login = ({ toggleForm }) => {
   const [email, setEmail] = useState("");
@@ -25,6 +24,11 @@ const Login = ({ toggleForm }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+
+  const isValidEmail = (email) => {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return emailRegex.test(email);
+  };
 
   const handleLogin = async () => {
     if (!isValidEmail(email)) {
@@ -45,59 +49,20 @@ const Login = ({ toggleForm }) => {
 
       if (response.status === 200) {
         sessionStorage.setItem("token", data.token);
-        sessionStorage.setItem("userEmail", data.user.email);
         sessionStorage.setItem("user", JSON.stringify(data.user));
-        window.location.href = "/chat"; // Navigate to chat
+        window.location.href = "/chat";
       } else {
         setErrorMessage(data.message || "Login failed. Try again.");
       }
     } catch (error) {
-      setErrorMessage("Something went wrong. Please try again.");
+      setErrorMessage("Something went wrong. Please try again.", error);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Box
-      textAlign="center"
-      sx={{
-        width: "80%",
-        marginTop: "-100px",
-        input: { color: "primary.main" }, // Text color inside the input
-        "& .MuiInputLabel-root": { color: "primary.main" },
-        "& .MuiOutlinedInput-root": {
-          "& fieldset": { borderColor: "primary.main" },
-          "&:hover fieldset": {
-            borderColor: "primary.main", // Border color on hover
-            borderWidth: "2px",
-          },
-          "&.Mui-focused fieldset": {
-            borderColor: "primary.main", // Border color on hover
-            borderWidth: "2px",
-          },
-        },
-      }}
-    >
-      {/* Logo */}
-      <img
-        src="/images/logo.png"
-        alt="ChatSphere Logo"
-        style={{
-          width: "60px",
-          height: "auto",
-          marginBottom: "10px",
-          borderRadius: "50%",
-        }}
-      />
-      <Typography
-        variant="h4"
-        sx={{ color: "primary.main", fontWeight: "bold", mb: 2 }}
-      >
-        Welcome to ChatSphere
-      </Typography>
-
-      {/* Email Input */}
+    <Box className="auth-form">
       <TextField
         label="Email"
         fullWidth
@@ -107,13 +72,12 @@ const Login = ({ toggleForm }) => {
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">
-              <EmailOutlined color="primary" />
+              <EmailOutlined />
             </InputAdornment>
           ),
         }}
       />
 
-      {/* Password Input */}
       <TextField
         label="Password"
         type={showPassword ? "text" : "password"}
@@ -124,15 +88,12 @@ const Login = ({ toggleForm }) => {
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">
-              <LockOutlined color="primary" />
+              <LockOutlined />
             </InputAdornment>
           ),
           endAdornment: (
             <InputAdornment position="end">
-              <IconButton
-                onClick={() => setShowPassword(!showPassword)}
-                edge="end"
-              >
+              <IconButton onClick={() => setShowPassword(!showPassword)}>
                 {showPassword ? <VisibilityOff /> : <Visibility />}
               </IconButton>
             </InputAdornment>
@@ -140,36 +101,24 @@ const Login = ({ toggleForm }) => {
         }}
       />
 
-      {/* Login Button */}
       <Button
         variant="contained"
-        color="primary"
         fullWidth
+        className="auth-button"
         onClick={handleLogin}
-        sx={{ mt: 2 }}
         disabled={loading}
       >
-        {loading ? (
-          <CircularProgress size={24} sx={{ color: "secondary.main" }} />
-        ) : (
-          "Login"
-        )}
+        {loading ? <CircularProgress size={24} /> : "Login"}
       </Button>
 
-      {/* Error Message */}
       {errorMessage && (
-        <Typography variant="body2" sx={{ mt: 2, color: "error.main" }}>
+        <Typography variant="body2" className="auth-error">
           {errorMessage}
         </Typography>
       )}
 
-      {/* Switch to Register */}
-      <Typography
-        variant="body2"
-        sx={{ mt: 2, color: "primary.main", cursor: "pointer" }}
-        onClick={toggleForm}
-      >
-        Don&#39;t have an account? <strong>Sign up here</strong>
+      <Typography variant="body2" className="switch-link" onClick={toggleForm}>
+        Don&apos;t have an account? <strong>Register here</strong>
       </Typography>
     </Box>
   );

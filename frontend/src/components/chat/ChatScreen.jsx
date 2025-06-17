@@ -1,7 +1,6 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react/prop-types */
-import { useState, useEffect, useRef } from "react";
-import { io } from "socket.io-client";
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Box,
   Avatar,
@@ -13,87 +12,89 @@ import {
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import SendIcon from "@mui/icons-material/Send";
 import API_ENDPOINTS from "../../helpers/constants";
-
-const socket = io("http://localhost:5000", { withCredentials: true });
+import "../styles/ChatScreen.css";
+import { format, isSameYear, isToday, isYesterday } from "date-fns";
 
 const ChatScreen = ({ selectedChat, setSelectedChat, setChats }) => {
   const [messages, setMessages] = useState([]);
   const [currentMessage, setCurrentMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef(null);
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
+
+  const loggedInUser = JSON.parse(sessionStorage.getItem("user")) || {};
+  const token = sessionStorage.getItem("token");
+  const pollingInterval = 1000;
 
   useEffect(() => {
-    // Scroll to bottom when selectedChat changes
-    if (selectedChat) {
-      setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-      }, 100); // Small delay to ensure rendering is done
+    const container = document.querySelector(".chat-messages");
+    if (!container) return;
+
+    const handleScroll = () => {
+      const atBottom =
+        container.scrollHeight - container.scrollTop - container.clientHeight <
+        100;
+      setShouldAutoScroll(atBottom);
+    };
+
+    container.addEventListener("scroll", handleScroll);
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    if (selectedChat?._id) {
+      fetchMessages();
+      setShouldAutoScroll(true);
+      const interval = setInterval(fetchMessages, pollingInterval);
+      return () => clearInterval(interval);
     }
-  }, [selectedChat]); // Run when chat is opened
-
-  useEffect(() => {
-    if (!selectedChat?._id) return;
-
-    const fetchMessages = async () => {
-      setLoading(true);
-      const token = sessionStorage.getItem("token");
-      if (!token) return;
-
-      try {
-        const response = await fetch(
-          API_ENDPOINTS.GET_MESSAGES(selectedChat._id),
-          {
-            method: "GET",
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-
-        if (!response.ok) throw new Error("Failed to fetch messages");
-
-        const data = await response.json();
-        setMessages(Array.isArray(data) ? data : []);
-
-        // Mark messages as seen
-        socket.emit("message-seen", { chatId: selectedChat._id });
-      } catch (error) {
-        console.error("Error fetching messages:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchMessages();
-
-    // WebSocket Listener for New Messages
-    const handleNewMessage = (newMessage) => {
-      if (newMessage.chatId === selectedChat._id) {
-        setMessages((prevMessages) => [...prevMessages, newMessage]);
-
-        // Mark as seen when message is received
-        socket.emit("message-seen", { chatId: selectedChat._id });
-      }
-    };
-
-    socket.on("new-message", handleNewMessage);
-
-    return () => {
-      socket.off("new-message", handleNewMessage); // Cleanup WebSocket listener
-    };
   }, [selectedChat]);
 
-  const handleSendMessage = async () => {
-    if (!currentMessage.trim() || !selectedChat?._id) return;
-
-    const token = sessionStorage.getItem("token");
-    const loggedInUser = JSON.parse(sessionStorage.getItem("user"));
-
-    if (!loggedInUser || !loggedInUser._id) {
-      console.error("❌ User not found in session storage.");
-      return;
+  useEffect(() => {
+    if (!loading && messages.length && shouldAutoScroll) {
+      scrollToBottomInstant();
     }
+  }, [messages, loading, shouldAutoScroll]);
 
+  const scrollToBottomInstant = () => {
+    const container = document.querySelector(".chat-messages");
+    if (container) container.scrollTop = container.scrollHeight;
+  };
+
+  const fetchMessages = async () => {
+    if (!token || !selectedChat?._id) return;
     try {
-      const response = await fetch(API_ENDPOINTS.SEND_MESSAGE, {
+      const res = await fetch(API_ENDPOINTS.GET_MESSAGES(selectedChat._id), {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Failed to fetch messages");
+
+      const data = await res.json();
+      if (!Array.isArray(data)) return;
+
+      const newLastMessageId = data[data.length - 1]?._id;
+      const currentLastMessageId = messagesEndRef.current;
+
+      if (
+        data.length !== messages.length ||
+        newLastMessageId !== currentLastMessageId
+      ) {
+        setMessages(data);
+        messagesEndRef.current = newLastMessageId;
+      }
+    } catch (err) {
+      console.error("Error fetching messages:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!currentMessage.trim() || !selectedChat?._id || !loggedInUser?._id)
+      return;
+    try {
+      const res = await fetch(API_ENDPOINTS.SEND_MESSAGE, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -104,36 +105,17 @@ const ChatScreen = ({ selectedChat, setSelectedChat, setChats }) => {
           content: currentMessage.trim(),
         }),
       });
-
-      const data = await response.json();
-
-      if (response.ok && data?.content) {
+      const data = await res.json();
+      if (res.ok && data?.content) {
         const newMsg = {
-          _id: Date.now(), // Temporary ID before backend response
-          sender: {
-            _id: loggedInUser._id,
-            username: loggedInUser.username,
-          },
+          _id: Date.now(),
+          sender: { _id: loggedInUser._id, username: loggedInUser.username },
           content: data.content,
           createdAt: new Date().toISOString(),
-          seen: false,
         };
-
-        // ✅ Ensure the chat name is correctly used
-        const chatDisplayName =
-          selectedChat.customNames?.[loggedInUser._id] ||
-          selectedChat.chatName ||
-          "Unknown Chat";
-
-        // ✅ Update messages in state immediately
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          { ...newMsg, receiverName: chatDisplayName },
-        ]);
-
-        // ✅ Update latest message in Sidebar chat list immediately
-        setChats((prevChats) =>
-          prevChats.map((chat) =>
+        setMessages((prev) => [...prev, newMsg]);
+        setChats((prev) =>
+          prev.map((chat) =>
             chat._id === selectedChat._id
               ? {
                   ...chat,
@@ -145,413 +127,168 @@ const ChatScreen = ({ selectedChat, setSelectedChat, setChats }) => {
               : chat
           )
         );
-
-        // ✅ Emit message via WebSocket
-        socket.emit("send-message", {
-          chatId: selectedChat._id,
-          message: { ...data, sender: newMsg.sender },
-        });
-
-        setCurrentMessage(""); // Clear input field
-
-        // ✅ Ensure scrolling works correctly
-        setTimeout(() => {
-          messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-        }, 150);
+        setCurrentMessage("");
+        scrollToBottomInstant();
       }
-    } catch (error) {
-      console.error("❌ Error sending message:", error);
+    } catch (err) {
+      console.error("Error sending message:", err);
     }
   };
 
   return (
-    <Box flexGrow={1} display="flex" flexDirection="column">
+    <Box
+      flexGrow={1}
+      display="flex"
+      flexDirection="column"
+      className="chat-screen chat-fade-slide"
+    >
       {selectedChat?._id ? (
         <>
-          {/* Chat Header */}
-          <Box
-            display="flex"
-            alignItems="center"
-            p={1.5}
-            sx={{
-              backgroundColor: "#1E1E2F", // Soft Black with a Blue Tint
-              color: "#EAEAEA", // Soft White Text
-              borderBottom: "2px solid #00FFFF", // Neon Cyan Border
-              borderRadius: "10px 10px 0 0", // Smooth Rounded Top
-              boxShadow: "0px 2px 6px rgba(0, 0, 0, 0.2)", // Subtle Depth
-            }}
-          >
-            {/* Back Button */}
+          {/* Header */}
+          <Box className="chat-header">
             <IconButton
               onClick={() => setSelectedChat(null)}
-              sx={{
-                color: "#4682B4", // Soft Blue Accent
-                mr: 1,
-                transition: "color 0.2s ease-in-out",
-                "&:hover": {
-                  color: "#5A9BD5", // Lighter Blue on Hover
-                },
-              }}
-              aria-label="Go back to chat list"
+              className="back-button"
+              aria-label="Back"
             >
               <ArrowBackIcon />
             </IconButton>
-
-            {/* Chat Avatar */}
-            <Avatar
-              sx={{
-                bgcolor: "#5A9BD5", // Soft Muted Blue
-                mr: 2,
-                width: 40,
-                height: 40,
-                fontSize: "1rem",
-                fontWeight: "bold",
-                boxShadow: "0px 2px 4px rgba(90, 155, 213, 0.3)", // Soft Avatar Depth
-              }}
-            >
-              {selectedChat?.chatName?.trim()
-                ? selectedChat.chatName.charAt(0).toUpperCase()
-                : "?"}
+            <Avatar className="chat-avatar">
+              {selectedChat._id === "bot-chat"
+                ? "🤖"
+                : selectedChat?.chatName?.charAt(0).toUpperCase() ||
+                  selectedChat?.customNames?.[loggedInUser._id]
+                    ?.charAt(0)
+                    .toUpperCase() ||
+                  "?"}
             </Avatar>
-
-            {/* Chat Name */}
-            <Typography
-              variant="h6"
-              sx={{
-                fontWeight: "bold",
-                flexGrow: 1,
-                overflow: "hidden",
-                whiteSpace: "nowrap",
-                textOverflow: "ellipsis",
-                color: "#F0F0F0", // Soft Grey for Better Readability
-              }}
-            >
-              {selectedChat?.chatName?.trim() || "Unknown Chat"}
+            <Typography className="chat-name" variant="subtitle1">
+              {selectedChat?.chatName ||
+                selectedChat?.customNames?.[loggedInUser._id] ||
+                "Unnamed Chat"}
             </Typography>
           </Box>
 
-          {/* Messages Display */}
-          <Box
-            flexGrow={1}
-            p={2}
-            sx={{ overflowY: "auto", display: "flex", flexDirection: "column" }}
-          >
-            {loading ? (
-              <Box display="flex" justifyContent="center" alignItems="center">
-                <CircularProgress size={24} />
-              </Box>
-            ) : messages.length > 0 ? (
-              messages.map((msg, index) => {
-                const loggedInUser =
-                  JSON.parse(sessionStorage.getItem("user")) || {};
+          {/* Chat Body */}
+          {selectedChat._id === "bot-chat" ? (
+            <Box className="chat-messages bot-chat-placeholder">
+              <Typography variant="h6" className="bot-placeholder-text">
+                🤖 Chat with Bot is under construction!
+              </Typography>
+              <Typography variant="body2" className="bot-placeholder-subtext">
+                We’re building something awesome here. Stay tuned!
+              </Typography>
+            </Box>
+          ) : (
+            <>
+              <Box className="chat-messages">
+                {loading ? (
+                  <Box className="loading-spinner">
+                    <CircularProgress size={24} />
+                  </Box>
+                ) : messages.length > 0 ? (
+                  messages.map((msg, index) => {
+                    const isUser = msg.sender?._id === loggedInUser._id;
+                    const senderName = isUser
+                      ? "You"
+                      : selectedChat?.chatName ||
+                        selectedChat?.customNames?.[msg.sender?._id] ||
+                        msg.sender?.username ||
+                        "Unknown";
 
-                const isLoggedInUser =
-                  String(msg.sender?._id) === String(loggedInUser._id);
+                    const createdAt = new Date(msg.createdAt);
+                    const prevCreatedAt =
+                      index > 0
+                        ? new Date(messages[index - 1].createdAt)
+                        : null;
+                    const showDate =
+                      !prevCreatedAt ||
+                      createdAt.toDateString() !== prevCreatedAt.toDateString();
 
-                const senderName = isLoggedInUser
-                  ? "You"
-                  : selectedChat?.chatName ||
-                    selectedChat?.customNames?.[String(msg.sender?._id)] ||
-                    msg.sender?.username ||
-                    "Unknown";
+                    let formattedDate = "";
+                    if (isToday(createdAt)) {
+                      formattedDate = "Today";
+                    } else if (isYesterday(createdAt)) {
+                      formattedDate = "Yesterday";
+                    } else {
+                      formattedDate = format(
+                        createdAt,
+                        !prevCreatedAt || !isSameYear(createdAt, prevCreatedAt)
+                          ? "d MMM yyyy"
+                          : "d MMM"
+                      );
+                    }
 
-                const messageTime = msg.createdAt
-                  ? new Date(msg.createdAt).toLocaleTimeString([], {
+                    const messageTime = createdAt.toLocaleTimeString([], {
                       hour: "2-digit",
                       minute: "2-digit",
                       hour12: true,
-                    })
-                  : "Time not available";
+                    });
 
-                // Date separator logic
-                const messageDate = new Date(
-                  msg.createdAt
-                ).toLocaleDateString();
-                const prevMessageDate =
-                  index > 0
-                    ? new Date(
-                        messages[index - 1].createdAt
-                      ).toLocaleDateString()
-                    : null;
-
-                const showDateSeparator = messageDate !== prevMessageDate;
-
-                return (
-                  <React.Fragment key={index}>
-                    {/* Date Separator - Modern Look */}
-                    {showDateSeparator && (
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          marginY: "16px",
-                        }}
-                      >
+                    return (
+                      <React.Fragment key={index}>
+                        {showDate && (
+                          <Box className="date-separator">
+                            <Typography className="date-text">
+                              {formattedDate}
+                            </Typography>
+                          </Box>
+                        )}
                         <Box
-                          sx={{
-                            flexGrow: 1,
-                            height: "1px",
-                            backgroundColor: "#ccc",
-                          }}
-                        />
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            backgroundColor: "#f0f0f0",
-                            padding: "6px 14px",
-                            borderRadius: "20px",
-                            fontWeight: "bold",
-                            color: "#444",
-                            fontSize: "0.75rem",
-                            mx: "8px",
-                          }}
+                          className={`chat-bubble ${isUser ? "you" : "other"}`}
                         >
-                          {messageDate}
-                        </Typography>
-                        <Box
-                          sx={{
-                            flexGrow: 1,
-                            height: "1px",
-                            backgroundColor: "#ccc",
-                          }}
-                        />
-                      </Box>
-                    )}
+                          <Typography className="sender-name">
+                            {senderName}
+                          </Typography>
+                          <Typography className="message-text">
+                            {msg.content}
+                          </Typography>
+                          <Typography className="timestamp">
+                            {messageTime}
+                          </Typography>
+                        </Box>
+                      </React.Fragment>
+                    );
+                  })
+                ) : (
+                  <Typography className="no-messages">
+                    Start a conversation...
+                  </Typography>
+                )}
+                <div ref={messagesEndRef} />
+              </Box>
 
-                    {/* Chat Bubble */}
-                    <Box
-                      sx={{
-                        padding: "8px 10px",
-                        borderRadius: isLoggedInUser
-                          ? "18px 18px 4px 18px"
-                          : "18px 18px 18px 4px",
-                        marginBottom: "20px",
-                        maxWidth: "75%",
-                        minWidth: "120px",
-                        alignSelf: isLoggedInUser ? "flex-end" : "flex-start",
-                        backgroundColor: isLoggedInUser ? "#0A84FF" : "#1C1C1E",
-                        color: isLoggedInUser ? "#ffffff" : "#D3D3D3",
-
-                        boxShadow: "0px 8px 20px rgba(0, 0, 0, 0.8)",
-                        backdropFilter: "blur(8px)", // Frosted glass effect
-                        border: "1px solid rgba(255, 255, 255, 0.4)",
-                        position: "relative",
-                        transition: "transform 0.3s ease-in-out",
-                        "&:hover": {
-                          transform: "translateY(-4px)", // Lifts on hover
-                        },
-                        animation: "floatBubble 3s ease-in-out infinite",
-                        "@keyframes floatBubble": {
-                          "0%": { transform: "translateY(0px)" },
-                          "50%": { transform: "translateY(-3px)" },
-                          "100%": { transform: "translateY(0px)" },
-                        },
-                      }}
-                    >
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          fontWeight: "bold",
-                          color: isLoggedInUser ? "#dfffd8" : "#444",
-                          marginBottom: "4px",
-                        }}
-                      >
-                        {senderName}
-                      </Typography>
-
-                      {/* Message Content */}
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          wordWrap: "break-word",
-                          lineHeight: 1.5,
-                        }}
-                      >
-                        {msg.content}
-                      </Typography>
-
-                      {/* Timestamp */}
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          position: "absolute",
-                          bottom: "-18px",
-                          right: "8px",
-                          fontSize: "0.75rem",
-                          color: isLoggedInUser ? "#c8e6c9" : "#888",
-                        }}
-                      >
-                        {messageTime}
-                      </Typography>
-
-                      {/* Seen Status */}
-                      {!isLoggedInUser && msg.seen && (
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            color: "#1e88e5",
-                            fontSize: "0.7rem",
-                            textAlign: "right",
-                            display: "block",
-                            marginTop: "4px",
-                          }}
-                        >
-                          Seen
-                        </Typography>
-                      )}
-                    </Box>
-                  </React.Fragment>
-                );
-              })
-            ) : (
-              <Typography
-                variant="body1"
-                color="textSecondary"
-                sx={{ textAlign: "center", mt: 3 }}
-              >
-                Start a conversation...
-              </Typography>
-            )}
-            <div ref={messagesEndRef} />
-          </Box>
-
-          {/* Message Input */}
-          <Box
-            display="flex"
-            alignItems="center"
-            p={1}
-            sx={{
-              backgroundColor: "#F8F9FA",
-              borderTop: "1px solid #ddd",
-              borderRadius: "0 0 12px 12px", // Slightly rounded at the bottom
-              boxShadow: "0px -2px 6px rgba(0, 0, 0, 0.05)", // Soft top shadow
-              input: { color: "primary.main" }, // Text color inside the input
-              "& .MuiInputLabel-root": { color: "primary.main" },
-              "& .MuiOutlinedInput-root": {
-                "& fieldset": { borderColor: "primary.main" },
-                "&:hover fieldset": {
-                  borderColor: "primary.main", // Border color on hover
-                  borderWidth: "2px",
-                },
-                "&.Mui-focused fieldset": {
-                  borderColor: "primary.main", // Border color on hover
-                  borderWidth: "2px",
-                },
-              },
-            }}
-          >
-            <TextField
-              fullWidth
-              placeholder="Type a message..."
-              variant="outlined"
-              value={currentMessage}
-              onChange={(e) => setCurrentMessage(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault(); // Prevents accidental line breaks
-                  if (currentMessage.trim()) {
-                    handleSendMessage();
-                  }
-                }
-              }}
-              aria-label="Type a message"
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: "24px",
-                  backgroundColor: "white",
-                  "& fieldset": { borderColor: "#ccc" },
-                  "&:hover fieldset": {
-                    borderColor: "#007AFF",
-                    borderWidth: "2px",
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: "#007AFF",
-                    borderWidth: "2px",
-                  },
-                },
-                input: { color: "#333", fontSize: "1rem" },
-              }}
-            />
-
-            <IconButton
-              sx={{
-                color: currentMessage.trim() ? "#007AFF" : "#ccc",
-                backgroundColor: currentMessage.trim()
-                  ? "#E3F2FD"
-                  : "transparent",
-                marginLeft: "8px",
-                transition: "all 0.3s ease-in-out",
-                "&:hover": {
-                  backgroundColor: currentMessage.trim()
-                    ? "#BBDEFB"
-                    : "transparent",
-                  transform: "scale(1.1)",
-                },
-              }}
-              onClick={handleSendMessage}
-              disabled={!currentMessage.trim()}
-            >
-              <SendIcon />
-            </IconButton>
-          </Box>
+              {/* Input Bar */}
+              <Box className="message-input-bar">
+                <TextField
+                  fullWidth
+                  placeholder="Type a message..."
+                  variant="outlined"
+                  value={currentMessage}
+                  onChange={(e) => setCurrentMessage(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendMessage();
+                    }
+                  }}
+                  className="message-input"
+                />
+                <IconButton
+                  onClick={handleSendMessage}
+                  disabled={!currentMessage.trim()}
+                  className={`send-button ${
+                    currentMessage.trim() ? "active" : "disabled"
+                  }`}
+                >
+                  <SendIcon />
+                </IconButton>
+              </Box>
+            </>
+          )}
         </>
       ) : (
-        <Box
-          flexGrow={1}
-          display="flex"
-          flexDirection="column"
-          justifyContent="center"
-          alignItems="center"
-          sx={{
-            backgroundColor: "#F4F6F", // Subtle bluish-gray for a clean UI
-            textAlign: "center",
-            padding: "20px",
-          }}
-        >
-          {/* Logo with Soft Floating Effect */}
-          <img
-            src="/images/logo.png"
-            alt="ChatSphere Logo"
-            onError={(e) => (e.target.style.display = "none")} // Hide if image fails to load
-            style={{
-              width: "70px",
-              height: "auto",
-              marginBottom: "15px",
-              borderRadius: "50%",
-              boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)", // Light Floating Effect
-              transition: "transform 0.3s ease-in-out",
-            }}
-            onMouseEnter={(e) => (e.target.style.transform = "scale(1.05)")}
-            onMouseLeave={(e) => (e.target.style.transform = "scale(1)")}
-          />
-
-          {/* Welcome Text */}
-          <Typography
-            variant="h4"
-            sx={{
-              fontWeight: "bold",
-              color: "#0A84FF", // Light Blue for a Vibrant Look
-              mb: 1,
-              letterSpacing: "0.5px",
-            }}
-          >
-            Welcome to ChatSphere
-          </Typography>
-
-          {/* Subtitle */}
-          <Typography
-            variant="h6"
-            sx={{
-              fontWeight: "500",
-              color: "white",
-              maxWidth: "80%",
-              opacity: 0.9, // Slight fade effect
-            }}
-          >
-            Select a chat to start messaging
-          </Typography>
-        </Box>
+        <Box className="welcome-screen"></Box>
       )}
     </Box>
   );

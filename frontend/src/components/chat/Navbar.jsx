@@ -1,153 +1,132 @@
-/* eslint-disable react/prop-types */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   AppBar,
   Toolbar,
   Typography,
-  Box,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   Button,
+  Menu,
+  MenuItem,
+  IconButton,
+  ListItemIcon,
+  ListItemText,
+  Divider,
+  Avatar,
 } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import LogoutIcon from "@mui/icons-material/ExitToApp";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import "../styles/Navbar.css";
 
-const Navbar = ({ setIsLoggedIn }) => {
-  const navigate = useNavigate();
+const Navbar = () => {
+  const location = useLocation();
   const [openDialog, setOpenDialog] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [username, setUsername] = useState("User");
+
+  const openMenu = Boolean(anchorEl);
+
+  useEffect(() => {
+    const storedUser = sessionStorage.getItem("user");
+    if (storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        setUsername(parsedUser.username || "User");
+      } catch (error) {
+        console.error("Error parsing user data:", error);
+      }
+    }
+  }, []);
 
   const handleLogout = () => {
-    sessionStorage.removeItem("token"); // Remove token
-    setIsLoggedIn(false); // Update state in App.js
-    navigate("/login"); // Redirect to login
+    sessionStorage.removeItem("token");
+    window.location.reload();
   };
+
+  const handleMenuClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const getInitial = (name) => name?.charAt(0).toUpperCase() || "U";
 
   return (
     <>
-      <AppBar
-        position="fixed"
-        sx={{
-          bgcolor: "primary.main",
-          width: "100vw",
-          top: 0,
-          borderBottom: "4px solid", // Solid Border
-          borderImage: "linear-gradient(90deg, #00FFFF, #FF00FF)", // Neon Gradient
-          borderImageSlice: 1, // Ensures full gradient is applied
-          borderRadius: "10px 10px 0 0",
-          boxShadow: "0px 0px 15px rgba(0, 255, 255, 0.8)", // Soft Glow Effect
-          animation: "neon-glow 3s linear infinite", // Apply Animation
-          "@keyframes neon-glow": {
-            "0%": { boxShadow: "0px 0px 10px #00FFFF" },
-            "50%": { boxShadow: "0px 0px 20px #FF00FF" },
-          },
-        }}
-      >
-        <Toolbar>
-          {/* Logo */}
-          <Box
-            component="img"
-            src="/images/logo.png"
-            alt="ChatSphere Logo"
-            sx={{ height: 40, width: 40, mr: 1, borderRadius: "50%" }}
-          />
+      <AppBar position="fixed" className="appBar" elevation={0}>
+        <Toolbar className="toolbar">
+          <div className="logoContainer">
+            <Typography variant="h6" className="title">
+              <strong>ChatRealm</strong>
+            </Typography>
+          </div>
 
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            <strong>ChatSphere</strong>
-          </Typography>
-
-          {/* Logout Button */}
           {location.pathname === "/chat" && (
-            <Button
-              onClick={() => setOpenDialog(true)}
-              startIcon={<LogoutIcon />}
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 1,
-                px: 2,
-                py: 1,
-                borderRadius: "20px",
-                fontWeight: 500,
-                transition: "all 0.3s ease",
-                bgcolor: "secondary.main",
-                color: "primary.main",
-                boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
-                "&:hover": {
-                  bgcolor: "primary.light",
-                  color: "white",
-                  fontWeight: 800,
-                  transform: "scale(1.05)",
-                  boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)",
-                },
-                "&:active": {
-                  transform: "scale(0.98)",
-                  boxShadow: "0px 2px 6px rgba(0, 0, 0, 0.2)",
-                },
-              }}
-            >
-              Logout
-            </Button>
+            <div className="navRightControls">
+              <IconButton onClick={handleMenuClick}>
+                <Avatar sx={{ bgcolor: "#1976d2", width: 36, height: 36 }}>
+                  {getInitial(username)}
+                </Avatar>
+              </IconButton>
+
+              <Menu
+                anchorEl={anchorEl}
+                open={openMenu}
+                onClose={handleMenuClose}
+                anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                transformOrigin={{ vertical: "top", horizontal: "right" }}
+              >
+                <MenuItem disabled>
+                  <ListItemText primary={username} />
+                </MenuItem>
+
+                <Divider className="customDivider" />
+
+                <MenuItem
+                  onClick={() => {
+                    handleMenuClose();
+                    setOpenDialog(true);
+                  }}
+                >
+                  <ListItemIcon>
+                    <LogoutIcon className="customIcon" />
+                  </ListItemIcon>
+                  <ListItemText primary="Logout" />
+                </MenuItem>
+              </Menu>
+            </div>
           )}
         </Toolbar>
       </AppBar>
 
-      {/* Logout Confirmation Dialog */}
       <Dialog
         open={openDialog}
         onClose={() => setOpenDialog(false)}
-        sx={{
-          "& .MuiDialog-paper": {
-            borderRadius: "8px",
-            bgcolor: "background.default",
-            padding: "16px",
-            minWidth: "320px",
-          },
-        }}
+        classes={{ paper: "dialogPaper" }}
       >
-        <DialogTitle sx={{ textAlign: "center", fontWeight: "bold" }}>
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-            }}
-          >
-            <WarningAmberIcon
-              sx={{ color: "warning.main", fontSize: 40, mb: 1 }}
-            />
+        <DialogTitle>
+          <div className="dialogTitleBox">
+            <WarningAmberIcon className="warningIcon" />
             <Typography component="span" variant="h6">
               Confirm Logout
             </Typography>
-          </Box>
+          </div>
         </DialogTitle>
 
-        <DialogContent sx={{ textAlign: "center", color: "text.secondary" }}>
+        <DialogContent className="dialogContent">
           Are you sure you want to logout?
         </DialogContent>
 
-        <DialogActions sx={{ justifyContent: "center", pb: 2 }}>
-          <Button
-            onClick={() => setOpenDialog(false)}
-            variant="outlined"
-            color="secondary"
-            sx={{ width: "100px", borderRadius: "20px" }}
-          >
+        <DialogActions className="dialogActions">
+          <Button onClick={() => setOpenDialog(false)} className="buttonCancel">
             Cancel
           </Button>
-          <Button
-            onClick={handleLogout}
-            variant="contained"
-            color="error"
-            sx={{
-              width: "100px",
-              borderRadius: "20px",
-              bgcolor: "error.main",
-              "&:hover": { bgcolor: "error.dark" },
-            }}
-          >
+          <Button onClick={handleLogout} className="buttonLogout">
             Logout
           </Button>
         </DialogActions>

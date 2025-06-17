@@ -11,30 +11,21 @@ const messageSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      index: true, // Faster queries by sender
+      index: true,
     },
     content: {
       type: String,
       trim: true,
       required: true,
       validate: {
-        validator: (value) => value.trim().length > 0, // Ensure non-empty content
+        validator: (value) => value.trim().length > 0,
         message: "Message cannot be empty.",
       },
     },
-    seenBy: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        index: true, // Index for better read performance
-        sparse: true, // Reduce index size for messages with no seenBy users
-      },
-    ],
   },
-  { timestamps: true } // Automatically adds createdAt and updatedAt fields
+  { timestamps: true }
 );
 
-// Indexing chat field to improve query performance
 messageSchema.index({ chat: 1 });
 
 const Message = mongoose.model("Message", messageSchema);

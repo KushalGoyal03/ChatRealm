@@ -1,0 +1,157 @@
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.08);
+  --glass-border: rgba(255, 255, 255, 0.25);
+  --blur-effect: blur(16px);
+  --button-active-bg: #ffffffee;
+  --button-active-color: #1e293b;
+  --button-inactive: #e2e8f0;
+  --primary-gradient-start: #1e3a8a;
+  --primary-gradient-end: #9333ea;
+  --text-color: #f1f5f9;
+}
+
+.home-wrapper {
+  height: 100vh;
+  width: 100vw;
+  background-image: url("/images/background.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: "Segoe UI", sans-serif;
+  overflow: hidden;
+}
+
+.glass-text {
+  position: absolute;
+  top: 30px;
+  left: 40px;
+  font-size: 32px;
+  font-weight: bold;
+  font-family: "Segoe UI", sans-serif;
+  background: rgba(255, 255, 255, 0.8);
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.9);
+  z-index: 2;
+  user-select: none;
+}
+
+.glass-form-container {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 30px;
+  width: 400px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.9);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  color: #fff;
+  user-select: none;
+}
+
+.glass-form-container .MuiInputBase-root {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  color: #fff;
+}
+
+.glass-form-container .MuiInputBase-input {
+  color: #fff;
+}
+
+.glass-form-container .MuiInputLabel-root {
+  color: #ccc;
+}
+
+.glass-form-container .MuiInputAdornment-root {
+  color: #ccc;
+}
+
+.glass-form-container .MuiOutlinedInput-notchedOutline {
+  border: none;
+}
+
+.glass-form-container .MuiInputBase-input::placeholder {
+  color: #ccc;
+}
+
+.glass-form-container .Mui-focused .MuiInputBase-input::placeholder {
+  color: #000;
+}
+
+.logo-title {
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.logo-title h1 {
+  font-size: 22px;
+  color: white;
+  margin: 0;
+}
+
+.form-toggle-buttons {
+  display: flex;
+  width: 100%;
+  justify-content: space-around;
+  margin-bottom: 10px;
+}
+
+.form-toggle-buttons button {
+  padding: 10px 20px;
+  border: none;
+  background: transparent;
+  color: var(--button-inactive);
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-bottom: 2px solid transparent;
+  border-radius: 6px;
+}
+
+.form-toggle-buttons button:hover {
+  color: #fff;
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.form-toggle-buttons button.active {
+  background-color: var(--button-active-bg);
+  color: var(--button-active-color);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.auth-form-content {
+  width: 100%;
+  color: var(--text-color);
+}
+
+.glass-form-container {
+  transition: transform 0.6s ease, opacity 0.4s ease;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+}
+
+/* Visible state */
+.fade180 {
+  opacity: 1;
+  transform: rotateY(0deg);
+}
+
+/* Hidden state (flipped) */
+.fade-out {
+  opacity: 0;
+  transform: rotateY(180deg);
+  pointer-events: none;
+}

@@ -1,4 +1,3 @@
-// userController.js
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/userModel");
@@ -6,6 +5,10 @@ const User = require("../models/userModel");
 // Register User
 const registerUser = async (req, res) => {
   const { email, username, password } = req.body;
+
+  if (!email || !username || !password) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
 
   try {
     const userExists = await User.findOne({ email });
@@ -17,17 +20,21 @@ const registerUser = async (req, res) => {
     const newUser = new User({ email, username, password: hashedPassword });
 
     await newUser.save();
+
     return res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
-    return res
-      .status(500)
-      .json({ message: "Server error", error: error.message });
+    console.error("Register error:", error.message);
+    return res.status(500).json({ message: "Server error" });
   }
 };
 
 // Login User
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ message: "Email and password are required" });
+  }
 
   try {
     const user = await User.findOne({ email });
@@ -50,9 +57,8 @@ const loginUser = async (req, res) => {
       message: "Login successful",
     });
   } catch (error) {
-    return res
-      .status(500)
-      .json({ message: "Server error", error: error.message });
+    console.error("Login error:", error.message);
+    return res.status(500).json({ message: "Server error" });
   }
 };
 

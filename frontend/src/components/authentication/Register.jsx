@@ -1,16 +1,15 @@
 /* eslint-disable react/prop-types */
-/* eslint-disable no-unused-vars */
 import { useState } from "react";
 import {
   TextField,
   Button,
-  Typography,
-  Box,
   IconButton,
   InputAdornment,
   CircularProgress,
   Snackbar,
   Alert,
+  Typography,
+  Box,
 } from "@mui/material";
 import {
   Visibility,
@@ -19,8 +18,8 @@ import {
   PersonOutline,
   LockOutlined,
 } from "@mui/icons-material";
-import { isValidEmail } from "../../utils/validateEmail";
 import API_ENDPOINTS from "../../helpers/constants";
+import "../styles/Login_Register.css";
 
 const Register = ({ toggleForm }) => {
   const [email, setEmail] = useState("");
@@ -31,11 +30,17 @@ const Register = ({ toggleForm }) => {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState(false);
 
+  const isValidEmail = (email) => {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return emailRegex.test(email);
+  };
+
   const handleRegister = async () => {
     if (!isValidEmail(email)) {
       setErrorMessage("Please enter a valid email");
       return;
     }
+
     setErrorMessage("");
     setLoading(true);
 
@@ -55,52 +60,14 @@ const Register = ({ toggleForm }) => {
         setErrorMessage(data.message || "Registration failed. Try again.");
       }
     } catch (error) {
-      setErrorMessage("Something went wrong. Please try again.");
+      setErrorMessage("Something went wrong. Please try again.", error);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Box
-      textAlign="center"
-      sx={{
-        width: "80%",
-        marginTop: "-50px",
-        input: { color: "primary.main" },
-        "& .MuiInputLabel-root": { color: "primary.main" },
-        "& .MuiOutlinedInput-root": {
-          "& fieldset": { borderColor: "primary.main" },
-          "&:hover fieldset": {
-            borderColor: "primary.main",
-            borderWidth: "2px",
-          },
-          "&.Mui-focused fieldset": {
-            borderColor: "primary.main",
-            borderWidth: "2px",
-          },
-        },
-      }}
-    >
-      {/* Logo */}
-      <img
-        src="/images/logo.png"
-        alt="ChatSphere Logo"
-        style={{
-          width: "60px",
-          height: "auto",
-          marginBottom: "10px",
-          borderRadius: "50%",
-        }}
-      />
-      <Typography
-        variant="h4"
-        sx={{ color: "primary.main", fontWeight: "bold", mb: 2 }}
-      >
-        Join ChatSphere
-      </Typography>
-
-      {/* Inputs */}
+    <Box className="auth-form">
       <TextField
         label="Email"
         fullWidth
@@ -110,11 +77,12 @@ const Register = ({ toggleForm }) => {
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">
-              <EmailOutlined color="primary" />
+              <EmailOutlined />
             </InputAdornment>
           ),
         }}
       />
+
       <TextField
         label="Username"
         fullWidth
@@ -124,11 +92,12 @@ const Register = ({ toggleForm }) => {
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">
-              <PersonOutline color="primary" />
+              <PersonOutline />
             </InputAdornment>
           ),
         }}
       />
+
       <TextField
         label="Password"
         type={showPassword ? "text" : "password"}
@@ -139,7 +108,7 @@ const Register = ({ toggleForm }) => {
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">
-              <LockOutlined color="primary" />
+              <LockOutlined />
             </InputAdornment>
           ),
           endAdornment: (
@@ -154,30 +123,24 @@ const Register = ({ toggleForm }) => {
 
       <Button
         variant="contained"
-        color="primary"
         fullWidth
+        className="auth-button"
         onClick={handleRegister}
-        sx={{ mt: 2 }}
         disabled={loading}
       >
         {loading ? <CircularProgress size={24} /> : "Sign Up"}
       </Button>
-      {/* Error Message */}
+
       {errorMessage && (
-        <Typography variant="body2" sx={{ mt: 2, color: "error.main" }}>
+        <Typography variant="body2" className="auth-error">
           {errorMessage}
         </Typography>
       )}
 
-      <Typography
-        variant="body2"
-        sx={{ mt: 2, color: "primary.main", cursor: "pointer" }}
-        onClick={toggleForm}
-      >
+      <Typography variant="body2" className="switch-link" onClick={toggleForm}>
         Already registered? <strong>Sign in here</strong>
       </Typography>
 
-      {/* Snackbar for Success Message */}
       <Snackbar
         open={successMessage}
         autoHideDuration={3000}

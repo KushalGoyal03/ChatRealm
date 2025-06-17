@@ -1,0 +1,178 @@
+.appBar.MuiAppBar-root {
+  width: 100vw;
+  height: 56px;
+  top: 0;
+  z-index: 1000;
+  background: linear-gradient(to right, #01061f, #556091);
+  display: flex;
+  justify-content: center;
+  padding: 0 24px;
+  box-shadow: 0 4px 10px rgba(74, 135, 173, 0.8);
+}
+
+.toolbar.MuiToolbar-root {
+  min-height: 56px !important;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 0 !important;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #84a7b5;
+  letter-spacing: 1px;
+}
+
+.navRightControls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* === Avatar === */
+.MuiAvatar-root {
+  background-color: #4fc3f7 !important;
+  color: #0d0d0d !important;
+  font-weight: bold;
+  width: 38px !important;
+  height: 38px !important;
+  font-size: 16px;
+  border: 2px solid #ffffff;
+  transition: transform 0.2s ease;
+}
+
+.MuiAvatar-root:hover {
+  transform: scale(1.05);
+}
+
+.MuiMenu-paper {
+  background: #17214a !important;
+  border-radius: 8px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4) !important;
+  border: 1px solid #d0d9f2;
+  padding: 6px 8px;
+  min-width: 200px;
+}
+
+/* === Menu Items === */
+.MuiMenuItem-root {
+  font-size: 14px;
+  padding: 8px 10px !important;
+  font-weight: 500 !important;
+  color: #a6b7c7 !important;
+  transition: all 0.2s ease;
+}
+
+.MuiMenuItem-root:hover {
+  background-color: #dde7ff !important;
+  color: #111d62 !important;
+  border-radius: 8px;
+}
+
+.customDivider.MuiDivider-root {
+  margin: 8px 12px;
+  border-color: #c1c8e4;
+  border-width: 1px;
+  opacity: 0.6;
+}
+
+.customIcon {
+  color: #b2b6ce;
+  font-size: 24px;
+  margin-right: 8px;
+  transition: color 0.3s ease;
+}
+
+.MuiMenuItem-root:hover .customIcon {
+  color: #111d62;
+}
+
+/* === Disabled (User Info) Item === */
+.MuiMenuItem-root.Mui-disabled {
+  opacity: 1 !important;
+  font-weight: 600 !important;
+  font-size: 15px;
+  color: #dbc8c8 !important;
+  background-color: transparent !important;
+  cursor: default;
+  justify-self: center !important;
+}
+
+/* === Logout Dialog Redesign === */
+.dialogPaper.MuiDialog-paper {
+  border-radius: 16px !important;
+  padding: 24px 20px;
+  min-width: 360px;
+  background: linear-gradient(135deg, #01061f, #556091) !important;
+  backdrop-filter: blur(18px);
+  color: #e0ecff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  transition: all 0.4s ease;
+}
+
+.dialogTitleBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.warningIcon {
+  color: #ffc107;
+  font-size: 44px;
+  margin-bottom: 8px;
+}
+
+.dialogContent {
+  text-align: center;
+  font-size: 15.5px;
+  color: #dde7ff;
+  margin: 12px 0;
+  opacity: 0.9;
+  line-height: 1.4;
+}
+
+.dialogActions {
+  justify-content: center;
+  padding-bottom: 16px;
+  gap: 14px;
+}
+
+/* === Dialog Buttons === */
+.buttonCancel.MuiButton-root,
+.buttonLogout.MuiButton-root {
+  width: 100px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: none;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+}
+
+/* Cancel */
+.buttonCancel {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #aebfdc !important;
+  border-color: #3c4a6b;
+}
+.buttonCancel:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: #e6eaff;
+  border-color: #0a84ff;
+}
+
+/* Logout */
+.buttonLogout {
+  background-color: #f44336;
+  color: #aebfdc !important;
+  /* box-shadow: 0 4px 12px rgba(244, 67, 54, 0.4); */
+}
+.buttonLogout:hover {
+  background-color: #b71b1b;
+  color: white !important;
+}

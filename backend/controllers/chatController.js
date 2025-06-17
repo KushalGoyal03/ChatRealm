@@ -1,9 +1,7 @@
 const Chat = require("../models/chatModel");
 const User = require("../models/userModel");
 const Message = require("../models/messageModel");
-const mongoose = require("mongoose");
 
-// Create a new chat or return existing chat
 const createChat = async (req, res) => {
   try {
     const { recipientEmail, customName } = req.body;
@@ -38,12 +36,12 @@ const createChat = async (req, res) => {
         .json({ message: "Chat already exists between these users" });
     }
 
-    // Create a new chat with proper custom names for both users
+    // Create a new chat
     chat = new Chat({
       participants: [senderId, recipient._id],
       customNames: {
-        [senderId]: customName?.trim() || recipient.username, // Sender's view of recipient
-        [recipient._id]: req.user.username, // Recipient sees sender’s username
+        [senderId]: customName?.trim() || recipient.username,
+        [recipient._id]: req.user.username,
       },
       messages: [],
     });
@@ -67,13 +65,13 @@ const getUserChats = async (req, res) => {
       .populate("participants", "username email")
       .populate({
         path: "messages",
-        select: "content createdAt sender seenBy",
-        options: { sort: { createdAt: -1 }, limit: 1 }, // Get only latest message
+        select: "content createdAt sender",
+        options: { sort: { createdAt: -1 }, limit: 1 },
       })
       .lean();
 
     chats.forEach((chat) => {
-      chat.customNames = chat.customNames || {}; // Ensure it's an object
+      chat.customNames = chat.customNames || {};
 
       chat.chatName =
         chat.customNames[userId] ||
@@ -81,9 +79,8 @@ const getUserChats = async (req, res) => {
           ?.username ||
         "Unknown";
 
-      // ✅ Assign latest message correctly
       chat.lastMessage = chat.messages.length > 0 ? chat.messages[0] : null;
-      delete chat.messages; // ❌ Remove messages array to avoid confusion
+      delete chat.messages;
 
       if (chat.lastMessage) {
         chat.lastMessage.time = new Date(
@@ -92,12 +89,6 @@ const getUserChats = async (req, res) => {
           hour: "2-digit",
           minute: "2-digit",
         });
-
-        chat.lastMessage.seen =
-          Array.isArray(chat.lastMessage.seenBy) &&
-          chat.lastMessage.seenBy.some(
-            (seenUserId) => seenUserId.toString() === userId.toString()
-          );
       }
     });
 
@@ -108,7 +99,6 @@ const getUserChats = async (req, res) => {
   }
 };
 
-// Update custom chat name (only for the user who updates it)
 const updateChatName = async (req, res) => {
   try {
     const { chatId } = req.params;
@@ -118,14 +108,11 @@ const updateChatName = async (req, res) => {
     const chat = await Chat.findById(chatId);
     if (!chat) return res.status(404).json({ message: "Chat not found" });
 
-    // Ensure the requesting user is a participant
     if (!chat.participants.some((id) => id.toString() === userId)) {
       return res.status(403).json({ message: "Unauthorized" });
     }
 
-    // Update customNames using Mongoose Map's .set() method
     chat.customNames.set(userId, customName?.trim() || "");
-
     await chat.save();
 
     res.status(200).json({ message: "Chat name updated successfully", chat });
@@ -135,7 +122,6 @@ const updateChatName = async (req, res) => {
   }
 };
 
-// Send a message in a chat
 const sendMessage = async (req, res) => {
   try {
     const { chatId, content } = req.body;
@@ -150,7 +136,6 @@ const sendMessage = async (req, res) => {
     const chat = await Chat.findById(chatId);
     if (!chat) return res.status(404).json({ message: "Chat not found" });
 
-    // Convert senderId to ObjectId for correct comparison
     if (!chat.participants.some((id) => id.toString() === senderId)) {
       return res
         .status(403)
@@ -161,16 +146,13 @@ const sendMessage = async (req, res) => {
       chat: chatId,
       sender: senderId,
       content: content.trim(),
-      seenBy: [senderId], // Marked as seen only by the sender
     });
 
     await newMessage.save();
 
-    // Add message to chat
     chat.messages.push(newMessage._id);
     await chat.save();
 
-    // Populate sender details before sending response
     const populatedMessage = await newMessage.populate(
       "sender",
       "username email"
@@ -183,11 +165,9 @@ const sendMessage = async (req, res) => {
   }
 };
 
-// Get all messages for a chat (with seen status and timestamps)
 const getChatMessages = async (req, res) => {
   try {
     const { chatId } = req.params;
-    const userId = req.user.id;
 
     const messages = await Message.find({ chat: chatId })
       .populate("sender", "username email")
@@ -201,7 +181,7 @@ const getChatMessages = async (req, res) => {
     let lastDate = "";
     messages.forEach((msg) => {
       if (!msg.createdAt) {
-        msg.time = "Unknown Time"; // Prevents Invalid Date
+        msg.time = "Unknown Time";
         msg.newDate = null;
       } else {
         const msgDate = new Date(msg.createdAt).toLocaleDateString();
@@ -210,7 +190,6 @@ const getChatMessages = async (req, res) => {
           minute: "2-digit",
         });
 
-        // Only set `newDate` when the date changes
         if (msgDate !== lastDate) {
           msg.newDate = msgDate;
           lastDate = msgDate;
@@ -218,11 +197,6 @@ const getChatMessages = async (req, res) => {
           msg.newDate = null;
         }
       }
-
-      // Fix seen status check (Ensure `seenBy` is an array)
-      msg.seen =
-        Array.isArray(msg.seenBy) &&
-        msg.seenBy.some((id) => id.toString() === userId);
     });
 
     res.status(200).json(messages);
@@ -232,27 +206,17 @@ const getChatMessages = async (req, res) => {
   }
 };
 
-// Mark messages as seen
-const markMessagesAsSeen = async (req, res) => {
+const getAllUsers = async (req, res) => {
   try {
-    const { chatId } = req.params;
-    const userId = req.user.id;
+    const currentUserId = req.user.id;
 
-    // Update messages directly without fetching them first
-    const result = await Message.updateMany(
-      { chat: chatId, seenBy: { $ne: userId } },
-      { $addToSet: { seenBy: userId } }
-    );
+    const users = await User.find({ _id: { $ne: currentUserId } })
+      .select("username email _id")
+      .lean();
 
-    if (result.modifiedCount === 0) {
-      return res
-        .status(200)
-        .json({ message: "No new messages to mark as seen." });
-    }
-
-    res.status(200).json({ message: "Messages marked as seen." });
+    res.status(200).json(users);
   } catch (error) {
-    console.error("Error marking messages as seen:", error);
+    console.error("Error fetching users:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -263,5 +227,5 @@ module.exports = {
   updateChatName,
   sendMessage,
   getChatMessages,
-  markMessagesAsSeen,
+  getAllUsers,
 };

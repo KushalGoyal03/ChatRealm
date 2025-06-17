@@ -1,0 +1,49 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: url("/images/background.jpg") no-repeat center center fixed;
+  background-size: cover;
+  overflow: hidden;
+}
+
+.chat-wrapper {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  gap: 14px;
+  padding: 14px;
+  padding-top: 70px;
+  box-sizing: border-box;
+}
+
+.sidebar-container {
+  width: 27%;
+  height: 100%;
+  border-radius: 8px;
+  margin-right: 5px;
+  padding: 10px;
+  box-sizing: border-box;
+  /* position: relative; */
+}
+
+.chat-container {
+  flex-grow: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  overflow: visible;
+  position: relative;
+}
+
+.chat-loading,
+.chat-error {
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1rem;
+  color: #ff5555;
+  font-weight: bold;
+}
