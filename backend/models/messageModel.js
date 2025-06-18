@@ -22,11 +22,15 @@ const messageSchema = new mongoose.Schema(
         message: "Message cannot be empty.",
       },
     },
+
+    isEncrypted: {
+      type: Boolean,
+      default: true,
+    },
   },
   { timestamps: true }
 );
 
 messageSchema.index({ chat: 1 });
-
 const Message = mongoose.model("Message", messageSchema);
 module.exports = Message;

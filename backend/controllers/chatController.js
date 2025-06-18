@@ -1,6 +1,8 @@
 const Chat = require("../models/chatModel");
 const User = require("../models/userModel");
 const Message = require("../models/messageModel");
+const CryptoJS = require("crypto-js");
+const SECRET_KEY = process.env.MESSAGE_SECRET || "ChatRealmKushalGoyal";
 
 const createChat = async (req, res) => {
   try {
@@ -142,10 +144,17 @@ const sendMessage = async (req, res) => {
         .json({ message: "You are not a participant in this chat" });
     }
 
+    // Encrypt message content
+    const encryptedContent = CryptoJS.AES.encrypt(
+      content.trim(),
+      SECRET_KEY
+    ).toString();
+
     const newMessage = new Message({
       chat: chatId,
       sender: senderId,
-      content: content.trim(),
+      content: encryptedContent,
+      isEncrypted: true,
     });
 
     await newMessage.save();
@@ -158,7 +167,10 @@ const sendMessage = async (req, res) => {
       "username email"
     );
 
-    res.status(201).json(populatedMessage);
+    res.status(201).json({
+      ...populatedMessage.toObject(),
+      content, // Return decrypted content to client immediately
+    });
   } catch (error) {
     console.error("Message sending failed:", error);
     res.status(500).json({ message: "Internal server error" });
@@ -179,7 +191,16 @@ const getChatMessages = async (req, res) => {
     }
 
     let lastDate = "";
-    messages.forEach((msg) => {
+
+    const decryptedMessages = messages.map((msg) => {
+      try {
+        const bytes = CryptoJS.AES.decrypt(msg.content, SECRET_KEY);
+        msg.content =
+          bytes.toString(CryptoJS.enc.Utf8) || "[Failed to decrypt]";
+      } catch {
+        msg.content = "[Decryption error]";
+      }
+
       if (!msg.createdAt) {
         msg.time = "Unknown Time";
         msg.newDate = null;
@@ -190,16 +211,14 @@ const getChatMessages = async (req, res) => {
           minute: "2-digit",
         });
 
-        if (msgDate !== lastDate) {
-          msg.newDate = msgDate;
-          lastDate = msgDate;
-        } else {
-          msg.newDate = null;
-        }
+        msg.newDate = msgDate !== lastDate ? msgDate : null;
+        lastDate = msgDate;
       }
+
+      return msg;
     });
 
-    res.status(200).json(messages);
+    res.status(200).json(decryptedMessages);
   } catch (error) {
     console.error("Fetching messages failed:", error);
     res.status(500).json({ message: "Internal server error" });

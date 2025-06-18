@@ -1,4 +1,4 @@
-require("dotenv").config(); // Ensure env variables are loaded first
+require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -15,35 +15,32 @@ app.use(express.json());
 // MongoDB Connection
 mongoose
   .connect(process.env.MONGO_URI)
-  .then(() => console.log("✅ MongoDB connected"))
+  .then(() => console.log("MongoDB connected"))
   .catch((err) => {
-    console.error("❌ MongoDB connection error:", err);
+    console.error("MongoDB connection error:", err);
     process.exit(1);
   });
 
-// Handle MongoDB connection errors after initial connection
 mongoose.connection.on("error", (err) => {
-  console.error("⚠️ MongoDB connection lost:", err);
+  console.error("MongoDB connection lost:", err);
 });
 
 // Routes
 app.use("/api/users", userRoutes);
 app.use("/api/chats", chatRoutes);
 
-// Root Route (For API Health Check)
 app.get("/", (req, res) => {
-  res.send("🚀 ChatSphere API is running...");
+  res.send("ChatSphere API is running...");
 });
 
 // Start Server
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
 
-// Graceful Shutdown Handling
 process.on("SIGINT", async () => {
-  console.log("⚠️ Server shutting down...");
+  console.log("Server shutting down...");
   await mongoose.connection.close();
-  console.log("✅ MongoDB connection closed.");
+  console.log("MongoDB connection closed.");
   process.exit(0);
 });

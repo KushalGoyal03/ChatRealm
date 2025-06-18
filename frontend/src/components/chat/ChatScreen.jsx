@@ -14,13 +14,15 @@ import SendIcon from "@mui/icons-material/Send";
 import API_ENDPOINTS from "../../helpers/constants";
 import "../styles/ChatScreen.css";
 import { format, isSameYear, isToday, isYesterday } from "date-fns";
+import { encrypt, decrypt } from "../../helpers/encryption";
 
 const ChatScreen = ({ selectedChat, setSelectedChat, setChats }) => {
   const [messages, setMessages] = useState([]);
   const [currentMessage, setCurrentMessage] = useState("");
   const [loading, setLoading] = useState(true);
-  const messagesEndRef = useRef(null);
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
+  const lastMessageIdRef = useRef(null);
+  const messagesEndRef = useRef(null);
 
   const loggedInUser = JSON.parse(sessionStorage.getItem("user")) || {};
   const token = sessionStorage.getItem("token");
@@ -52,11 +54,11 @@ const ChatScreen = ({ selectedChat, setSelectedChat, setChats }) => {
 
   useEffect(() => {
     if (!loading && messages.length && shouldAutoScroll) {
-      scrollToBottomInstant();
+      scrollToBottom();
     }
   }, [messages, loading, shouldAutoScroll]);
 
-  const scrollToBottomInstant = () => {
+  const scrollToBottom = () => {
     const container = document.querySelector(".chat-messages");
     if (container) container.scrollTop = container.scrollHeight;
   };
@@ -68,20 +70,25 @@ const ChatScreen = ({ selectedChat, setSelectedChat, setChats }) => {
         method: "GET",
         headers: { Authorization: `Bearer ${token}` },
       });
+
       if (!res.ok) throw new Error("Failed to fetch messages");
 
       const data = await res.json();
       if (!Array.isArray(data)) return;
 
-      const newLastMessageId = data[data.length - 1]?._id;
-      const currentLastMessageId = messagesEndRef.current;
+      const latestMsgId = data[data.length - 1]?._id;
 
       if (
         data.length !== messages.length ||
-        newLastMessageId !== currentLastMessageId
+        latestMsgId !== lastMessageIdRef.current
       ) {
-        setMessages(data);
-        messagesEndRef.current = newLastMessageId;
+        const decryptedMessages = data.map((msg) => ({
+          ...msg,
+          content: decrypt(msg.content),
+        }));
+        setMessages(decryptedMessages);
+
+        lastMessageIdRef.current = latestMsgId;
       }
     } catch (err) {
       console.error("Error fetching messages:", err);
@@ -93,6 +100,9 @@ const ChatScreen = ({ selectedChat, setSelectedChat, setChats }) => {
   const handleSendMessage = async () => {
     if (!currentMessage.trim() || !selectedChat?._id || !loggedInUser?._id)
       return;
+
+    const encryptedText = encrypt(currentMessage.trim());
+
     try {
       const res = await fetch(API_ENDPOINTS.SEND_MESSAGE, {
         method: "POST",
@@ -102,17 +112,19 @@ const ChatScreen = ({ selectedChat, setSelectedChat, setChats }) => {
         },
         body: JSON.stringify({
           chatId: selectedChat._id,
-          content: currentMessage.trim(),
+          content: encryptedText,
         }),
       });
+
       const data = await res.json();
       if (res.ok && data?.content) {
         const newMsg = {
-          _id: Date.now(),
+          _id: crypto.randomUUID(),
           sender: { _id: loggedInUser._id, username: loggedInUser.username },
-          content: data.content,
+          content: currentMessage.trim(), // keep plain for UI
           createdAt: new Date().toISOString(),
         };
+
         setMessages((prev) => [...prev, newMsg]);
         setChats((prev) =>
           prev.map((chat) =>
@@ -120,15 +132,16 @@ const ChatScreen = ({ selectedChat, setSelectedChat, setChats }) => {
               ? {
                   ...chat,
                   lastMessage: {
-                    content: data.content,
+                    content: currentMessage.trim(),
                     senderId: loggedInUser._id,
                   },
                 }
               : chat
           )
         );
+
         setCurrentMessage("");
-        scrollToBottomInstant();
+        scrollToBottom();
       }
     } catch (err) {
       console.error("Error sending message:", err);
@@ -149,7 +162,6 @@ const ChatScreen = ({ selectedChat, setSelectedChat, setChats }) => {
             <IconButton
               onClick={() => setSelectedChat(null)}
               className="back-button"
-              aria-label="Back"
             >
               <ArrowBackIcon />
             </IconButton>
@@ -226,7 +238,7 @@ const ChatScreen = ({ selectedChat, setSelectedChat, setChats }) => {
                     });
 
                     return (
-                      <React.Fragment key={index}>
+                      <React.Fragment key={msg._id || index}>
                         {showDate && (
                           <Box className="date-separator">
                             <Typography className="date-text">
@@ -288,7 +300,7 @@ const ChatScreen = ({ selectedChat, setSelectedChat, setChats }) => {
           )}
         </>
       ) : (
-        <Box className="welcome-screen"></Box>
+        <Box className="welcome-screen" />
       )}
     </Box>
   );
