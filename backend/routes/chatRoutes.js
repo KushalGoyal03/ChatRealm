@@ -6,16 +6,17 @@ const {
   sendMessage,
   getChatMessages,
   getAllUsers,
+  deleteChatForMe,
 } = require("../controllers/chatController");
 
 const verifyToken = require("../middleware/authMiddleware");
-const { verify } = require("jsonwebtoken");
 const router = express.Router();
 
 // Chat-related routes
 router.post("/create", verifyToken, createChat);
 router.get("/user-chats", verifyToken, getUserChats);
 router.patch("/update-name/:chatId", verifyToken, updateChatName);
+router.patch("/delete/:chatId", verifyToken, deleteChatForMe);
 
 // Message-related routes
 router.post("/send-message", verifyToken, sendMessage);

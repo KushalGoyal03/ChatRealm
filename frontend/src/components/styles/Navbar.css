@@ -170,7 +170,6 @@
 .buttonLogout {
   background-color: #f44336;
   color: #aebfdc !important;
-  /* box-shadow: 0 4px 12px rgba(244, 67, 54, 0.4); */
 }
 .buttonLogout:hover {
   background-color: #b71b1b;

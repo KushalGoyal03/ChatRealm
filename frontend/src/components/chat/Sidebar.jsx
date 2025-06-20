@@ -16,8 +16,12 @@ import {
   DialogActions,
   TextField,
   Button,
+  Typography,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import API_ENDPOINTS from "../../helpers/constants";
 import "../styles/Sidebar.css";
 
@@ -27,12 +31,22 @@ const Sidebar = ({ selectedChat, setSelectedChat }) => {
   const [menuAnchor, setMenuAnchor] = useState(null);
   const [selectedMenuChat, setSelectedMenuChat] = useState(null);
   const [openRenameDialog, setOpenRenameDialog] = useState(false);
-  const [renameChatId, setRenameChatId] = useState(null);
   const [renameChatName, setRenameChatName] = useState("");
   const [allUsers, setAllUsers] = useState([]);
   const [userMenuAnchor, setUserMenuAnchor] = useState(null);
   const [chatSearchQuery, setChatSearchQuery] = useState("");
   const [userSearchQuery, setUserSearchQuery] = useState("");
+  const [openConfirmDelete, setOpenConfirmDelete] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success"); // "success" | "error" | "info" | "warning"
+  const [snackbarPosition, setSnackbarPosition] = useState({
+    vertical: "top",
+    horizontal: "center",
+  });
+
+  const token = sessionStorage.getItem("token");
+  const currentUser = JSON.parse(sessionStorage.getItem("user"));
 
   const botChat = {
     _id: "bot-chat",
@@ -41,23 +55,17 @@ const Sidebar = ({ selectedChat, setSelectedChat }) => {
   };
 
   const fetchChats = useCallback(async () => {
-    const token = sessionStorage.getItem("token");
-    if (!token) {
-      setLoading(false);
-      return;
-    }
+    if (!token || !currentUser?._id) return;
 
     try {
       const response = await fetch(API_ENDPOINTS.GET_CHATS, {
         method: "GET",
-        credentials: "include",
         headers: { Authorization: `Bearer ${token}` },
       });
 
       const data = await response.json();
-
       if (response.ok) {
-        const sortedChats = [...(data || [])].sort(
+        const sortedChats = (data || []).sort(
           (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
         );
         setChats(sortedChats);
@@ -67,17 +75,16 @@ const Sidebar = ({ selectedChat, setSelectedChat }) => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [token, currentUser?._id]);
 
   useEffect(() => {
     fetchChats();
-    const interval = setInterval(fetchChats, 2000);
+    const interval = setInterval(fetchChats, 1000);
     return () => clearInterval(interval);
   }, [fetchChats]);
 
   useEffect(() => {
     const fetchAllUsers = async () => {
-      const token = sessionStorage.getItem("token");
       if (!token) return;
 
       try {
@@ -92,44 +99,26 @@ const Sidebar = ({ selectedChat, setSelectedChat }) => {
       }
     };
     fetchAllUsers();
-  }, []);
+  }, [token]);
 
-  const handleChatSelection = async (chat) => {
+  const handleChatSelection = (chat) => {
     setChatSearchQuery("");
     setSelectedChat(chat);
-
-    if (chat.isBot) return;
-
-    const token = sessionStorage.getItem("token");
-    if (!token) return;
-
-    try {
-      await fetch(API_ENDPOINTS.MARK_MESSAGES_SEEN(chat._id), {
-        method: "PATCH",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-    } catch (error) {
-      console.error("Failed to mark messages as seen:", error);
-    }
   };
 
   const handleRenameChat = () => {
     if (!selectedMenuChat) return;
-    setRenameChatId(selectedMenuChat._id);
     setRenameChatName(selectedMenuChat.chatName);
     setOpenRenameDialog(true);
     setMenuAnchor(null);
   };
 
   const handleUpdateChatName = async () => {
-    if (!renameChatName.trim()) return;
-    const token = sessionStorage.getItem("token");
-    const user = JSON.parse(sessionStorage.getItem("user"));
-    if (!token || !user?._id) return;
+    if (!renameChatName.trim() || !token || !currentUser?._id) return;
 
     try {
       const response = await fetch(
-        API_ENDPOINTS.UPDATE_CHAT_NAME(renameChatId),
+        API_ENDPOINTS.UPDATE_CHAT_NAME(selectedMenuChat._id),
         {
           method: "PATCH",
           headers: {
@@ -143,12 +132,12 @@ const Sidebar = ({ selectedChat, setSelectedChat }) => {
       if (response.ok) {
         setChats((prevChats) =>
           prevChats.map((chat) =>
-            chat._id === renameChatId
+            chat._id === selectedMenuChat._id
               ? {
                   ...chat,
                   customNames: {
                     ...chat.customNames,
-                    [user._id]: renameChatName,
+                    [currentUser._id]: renameChatName,
                   },
                 }
               : chat
@@ -162,6 +151,33 @@ const Sidebar = ({ selectedChat, setSelectedChat }) => {
     }
   };
 
+  const confirmDeleteChat = async () => {
+    if (!token || !currentUser || !selectedMenuChat) return;
+
+    try {
+      const response = await fetch(
+        API_ENDPOINTS.DELETE_CHAT(selectedMenuChat._id),
+        {
+          method: "PATCH",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (response.ok) {
+        if (selectedChat?._id === selectedMenuChat._id) {
+          setSelectedChat(null);
+        }
+        setSelectedMenuChat(null);
+        setOpenConfirmDelete(false);
+        fetchChats();
+        showSnackbar("Chat deleted", "info");
+      }
+    } catch (error) {
+      console.error("Error deleting chat:", error);
+      setOpenConfirmDelete(false);
+    }
+  };
+
   const handleUserSelection = async (user) => {
     const existingChat = chats.find((chat) =>
       chat.participants.some((p) => p._id === user._id)
@@ -172,8 +188,6 @@ const Sidebar = ({ selectedChat, setSelectedChat }) => {
       return;
     }
 
-    const token = sessionStorage.getItem("token");
-    const currentUser = JSON.parse(sessionStorage.getItem("user"));
     if (!token || !currentUser) return;
 
     try {
@@ -191,9 +205,12 @@ const Sidebar = ({ selectedChat, setSelectedChat }) => {
 
       const newChat = await response.json();
       if (response.ok) {
-        setChats((prevChats) => [...prevChats, newChat]);
         setSelectedChat(newChat);
         await fetchChats();
+        showSnackbar(
+          `Chat with ${user.username || user.email} created`,
+          "success"
+        );
       } else {
         console.error("Failed to create new chat:", newChat.message);
       }
@@ -207,6 +224,20 @@ const Sidebar = ({ selectedChat, setSelectedChat }) => {
       user.username.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(userSearchQuery.toLowerCase())
   );
+
+  const getChatDisplayName = (chat) =>
+    chat.customNames?.[currentUser._id] || chat.chatName || "Unnamed Chat";
+
+  const showSnackbar = (
+    message,
+    severity = "success",
+    position = { vertical: "top", horizontal: "center" }
+  ) => {
+    setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
+    setSnackbarPosition(position);
+    setSnackbarOpen(true);
+  };
 
   return (
     <div className="sidebar-container">
@@ -257,10 +288,14 @@ const Sidebar = ({ selectedChat, setSelectedChat }) => {
               </ListItem>
             )}
 
+            {chats.length === 0 && (
+              <div className="no-chats">No chats available</div>
+            )}
+
             {chats
               .filter((chat) =>
-                chat.chatName
-                  ?.toLowerCase()
+                getChatDisplayName(chat)
+                  .toLowerCase()
                   .includes(chatSearchQuery.toLowerCase())
               )
               .map((chat) => (
@@ -274,11 +309,11 @@ const Sidebar = ({ selectedChat, setSelectedChat }) => {
                 >
                   <ListItemAvatar>
                     <Avatar className="chat-avatar">
-                      {chat.chatName?.charAt(0).toUpperCase() || "?"}
+                      {getChatDisplayName(chat)?.charAt(0).toUpperCase() || "?"}
                     </Avatar>
                   </ListItemAvatar>
                   <ListItemText
-                    primary={chat.chatName || "Unknown Chat"}
+                    primary={getChatDisplayName(chat)}
                     primaryTypographyProps={{ className: "chat-title" }}
                   />
                   <IconButton
@@ -292,10 +327,6 @@ const Sidebar = ({ selectedChat, setSelectedChat }) => {
                   </IconButton>
                 </ListItem>
               ))}
-
-            {chats.length === 0 && (
-              <div className="no-chats">No chats available</div>
-            )}
           </List>
         )}
       </div>
@@ -314,18 +345,11 @@ const Sidebar = ({ selectedChat, setSelectedChat }) => {
         onClose={() => setUserMenuAnchor(null)}
         className="user-list-popup"
         MenuListProps={{ disablePadding: true }}
-        anchorOrigin={{
-          vertical: "bottom",
-          horizontal: "right",
-        }}
-        transformOrigin={{
-          vertical: "top",
-          horizontal: "left",
-        }}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        transformOrigin={{ vertical: "top", horizontal: "left" }}
       >
         <div style={{ padding: "0 12px" }}>
           <div className="user-list-heading">Available Users</div>
-
           <div className="user-search-wrapper">
             <input
               type="text"
@@ -357,25 +381,30 @@ const Sidebar = ({ selectedChat, setSelectedChat }) => {
                   handleUserSelection(user);
                 }}
               >
-                {user.username}{" "}
-                <span
-                  style={{ fontSize: "0.8rem", color: "#888", marginLeft: 6 }}
-                >
-                  ({user.email})
-                </span>
+                {user.username}
+                <span className="user-email-hint">({user.email})</span>
               </MenuItem>
             ))
           )}
         </div>
       </Menu>
 
-      {/* Rename Chat Menu */}
+      {/* Rename/Delete Menu */}
       <Menu
         anchorEl={menuAnchor}
         open={Boolean(menuAnchor)}
         onClose={() => setMenuAnchor(null)}
       >
         <MenuItem onClick={handleRenameChat}>Rename Chat</MenuItem>
+        <MenuItem
+          onClick={() => {
+            setOpenConfirmDelete(true); // open confirmation dialog
+            setMenuAnchor(null); // close menu
+          }}
+          style={{ color: "red" }}
+        >
+          Delete Chat
+        </MenuItem>
       </Menu>
 
       {/* Rename Dialog */}
@@ -403,6 +432,51 @@ const Sidebar = ({ selectedChat, setSelectedChat }) => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Dialog
+        open={openConfirmDelete}
+        onClose={() => setOpenConfirmDelete(false)}
+        classes={{ paper: "dialogPaper" }}
+      >
+        <DialogTitle>
+          <div className="dialogTitleBox">
+            <WarningAmberIcon className="warningIcon" />
+            <Typography component="span" variant="h6">
+              Confirm Delete
+            </Typography>
+          </div>
+        </DialogTitle>
+        <DialogContent className="dialogContent">
+          Are you sure you want to delete this chat?
+        </DialogContent>
+        <DialogActions className="dialogContent">
+          <Button
+            onClick={() => setOpenConfirmDelete(false)}
+            className="buttonCancel"
+          >
+            Cancel
+          </Button>
+          <Button onClick={confirmDeleteChat} className="buttonLogout">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={2000}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={snackbarPosition}
+      >
+        <Alert
+          onClose={() => setSnackbarOpen(false)}
+          severity={snackbarSeverity}
+          variant="filled"
+          sx={{ width: "100%", borderRadius: "12px" }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };

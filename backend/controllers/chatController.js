@@ -13,10 +13,10 @@ const createChat = async (req, res) => {
       return res.status(400).json({ message: "Recipient email is required" });
     }
 
-    // Find recipient
     const recipient = await User.findOne({
       email: recipientEmail.trim(),
     }).lean();
+
     if (!recipient) {
       return res.status(404).json({ message: "Recipient not found" });
     }
@@ -27,18 +27,27 @@ const createChat = async (req, res) => {
         .json({ message: "Cannot start a chat with yourself" });
     }
 
-    // Check if chat already exists
     let chat = await Chat.findOne({
       participants: { $all: [senderId, recipient._id] },
     });
 
     if (chat) {
+      const wasDeletedForUser = chat.deletedFor?.includes(senderId);
+      if (wasDeletedForUser) {
+        // Restore the chat for current user
+        chat.deletedFor = chat.deletedFor.filter(
+          (id) => id.toString() !== senderId
+        );
+        chat.lastDeletedAt?.delete?.(senderId.toString());
+        await chat.save();
+        return res.status(200).json(chat);
+      }
+
       return res
         .status(400)
         .json({ message: "Chat already exists between these users" });
     }
 
-    // Create a new chat
     chat = new Chat({
       participants: [senderId, recipient._id],
       customNames: {
@@ -72,7 +81,11 @@ const getUserChats = async (req, res) => {
       })
       .lean();
 
-    chats.forEach((chat) => {
+    const visibleChats = chats.filter(
+      (chat) => !chat.deletedFor?.some((id) => id.toString() === userId)
+    );
+
+    visibleChats.forEach((chat) => {
       chat.customNames = chat.customNames || {};
 
       chat.chatName =
@@ -94,7 +107,7 @@ const getUserChats = async (req, res) => {
       }
     });
 
-    res.status(200).json(chats);
+    res.status(200).json(visibleChats);
   } catch (error) {
     console.error("Error fetching chats:", error);
     res.status(500).json({ message: "Internal server error" });
@@ -169,7 +182,7 @@ const sendMessage = async (req, res) => {
 
     res.status(201).json({
       ...populatedMessage.toObject(),
-      content, // Return decrypted content to client immediately
+      content,
     });
   } catch (error) {
     console.error("Message sending failed:", error);
@@ -180,24 +193,37 @@ const sendMessage = async (req, res) => {
 const getChatMessages = async (req, res) => {
   try {
     const { chatId } = req.params;
+    const userId = req.user.id.toString();
 
-    const messages = await Message.find({ chat: chatId })
+    const chat = await Chat.findById(chatId).exec();
+    if (!chat) {
+      return res.status(404).json({ message: "Chat not found" });
+    }
+
+    if (!chat.participants.some((id) => id.toString() === userId)) {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+
+    const deletedAt = chat.lastDeletedAt?.[userId];
+
+    let filter = { chat: chatId };
+    if (chat.deletedFor?.includes(userId) && deletedAt) {
+      filter.createdAt = { $gt: deletedAt };
+    }
+
+    const messages = await Message.find(filter)
       .populate("sender", "username email")
       .sort({ createdAt: 1 })
       .lean();
 
-    if (!messages.length) {
-      return res.status(200).json([]);
-    }
-
     let lastDate = "";
-
-    const decryptedMessages = messages.map((msg) => {
+    const decryptedMessages = messages.map((msg, idx) => {
       try {
         const bytes = CryptoJS.AES.decrypt(msg.content, SECRET_KEY);
         msg.content =
           bytes.toString(CryptoJS.enc.Utf8) || "[Failed to decrypt]";
-      } catch {
+      } catch (err) {
+        console.error(`Decryption error at msg[${idx}]`, err);
         msg.content = "[Decryption error]";
       }
 
@@ -210,7 +236,6 @@ const getChatMessages = async (req, res) => {
           hour: "2-digit",
           minute: "2-digit",
         });
-
         msg.newDate = msgDate !== lastDate ? msgDate : null;
         lastDate = msgDate;
       }
@@ -240,6 +265,39 @@ const getAllUsers = async (req, res) => {
   }
 };
 
+const deleteChatForMe = async (req, res) => {
+  try {
+    const { chatId } = req.params;
+    const userId = req.user.id.toString();
+
+    const chat = await Chat.findById(chatId);
+    if (!chat) {
+      return res.status(404).json({ message: "Chat not found" });
+    }
+
+    if (!chat.participants.some((id) => id.toString() === userId)) {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+
+    if (!chat.deletedFor.includes(userId)) {
+      chat.deletedFor.push(userId);
+      chat.lastDeletedAt[userId] = new Date();
+      chat.markModified("lastDeletedAt");
+    }
+
+    if (!chat.lastDeletedAt) chat.lastDeletedAt = {};
+
+    chat.lastDeletedAt[userId] = new Date();
+    chat.markModified("lastDeletedAt");
+    await chat.save();
+
+    res.status(200).json({ message: "Chat deleted for current user" });
+  } catch (error) {
+    console.error("Error deleting chat for user:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 module.exports = {
   createChat,
   getUserChats,
@@ -247,4 +305,5 @@ module.exports = {
   sendMessage,
   getChatMessages,
   getAllUsers,
+  deleteChatForMe,
 };

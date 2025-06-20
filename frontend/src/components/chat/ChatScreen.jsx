@@ -22,7 +22,7 @@ const ChatScreen = ({ selectedChat, setSelectedChat, setChats }) => {
   const [loading, setLoading] = useState(true);
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
   const lastMessageIdRef = useRef(null);
-  const messagesEndRef = useRef(null);
+  // const messagesEndRef = useRef(null);
 
   const loggedInUser = JSON.parse(sessionStorage.getItem("user")) || {};
   const token = sessionStorage.getItem("token");
@@ -206,7 +206,7 @@ const ChatScreen = ({ selectedChat, setSelectedChat, setChats }) => {
                       : selectedChat?.chatName ||
                         selectedChat?.customNames?.[msg.sender?._id] ||
                         msg.sender?.username ||
-                        "Unknown";
+                        "Unnamed";
 
                     const createdAt = new Date(msg.createdAt);
                     const prevCreatedAt =
@@ -267,7 +267,6 @@ const ChatScreen = ({ selectedChat, setSelectedChat, setChats }) => {
                     Start a conversation...
                   </Typography>
                 )}
-                <div ref={messagesEndRef} />
               </Box>
 
               {/* Input Bar */}

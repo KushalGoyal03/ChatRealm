@@ -23,14 +23,23 @@ const messageSchema = new mongoose.Schema(
       },
     },
 
+    // Encryption flag (unchanged)
     isEncrypted: {
       type: Boolean,
       default: true,
+    },
+    deletedFor: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "User", default: [] },
+    ],
+    isDeletedForEveryone: {
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true }
 );
 
 messageSchema.index({ chat: 1 });
+
 const Message = mongoose.model("Message", messageSchema);
 module.exports = Message;

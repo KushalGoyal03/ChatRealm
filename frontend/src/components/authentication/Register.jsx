@@ -143,9 +143,9 @@ const Register = ({ toggleForm }) => {
 
       <Snackbar
         open={successMessage}
-        autoHideDuration={3000}
+        autoHideDuration={2000}
         onClose={() => setSuccessMessage(false)}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
         <Alert
           severity="success"
