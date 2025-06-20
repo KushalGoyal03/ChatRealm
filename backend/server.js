@@ -2,28 +2,19 @@ require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const connectDB = require("./config/db");
 const userRoutes = require("./routes/userRoutes");
 const chatRoutes = require("./routes/chatRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Connect to MongoDB
+connectDB();
+
 // Middleware
 app.use(cors({ origin: "http://localhost:3000", credentials: true }));
 app.use(express.json());
-
-// MongoDB Connection
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB connected"))
-  .catch((err) => {
-    console.error("MongoDB connection error:", err);
-    process.exit(1);
-  });
-
-mongoose.connection.on("error", (err) => {
-  console.error("MongoDB connection lost:", err);
-});
 
 // Routes
 app.use("/api/users", userRoutes);
@@ -34,10 +25,11 @@ app.get("/", (req, res) => {
 });
 
 // Start Server
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
+// Graceful Shutdown
 process.on("SIGINT", async () => {
   console.log("Server shutting down...");
   await mongoose.connection.close();
